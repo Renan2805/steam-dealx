@@ -1,4 +1,11 @@
 <Solution>
-  <Folder Name="/src/" />
-  <Folder Name="/tests/" />
+  <Folder Name="/src/">
+    <Project Path="src\SteamDealX.Api\SteamDealX.Api.csproj" />
+    <Project Path="src\SteamDealX.Clients\SteamDealX.Clients.csproj" />
+    <Project Path="src\SteamDealX.Core\SteamDealX.Core.csproj" />
+    <Project Path="src\SteamDealX.Infrastructure\SteamDealX.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests\SteamDealX.Clients.Tests\SteamDealX.Clients.Tests.csproj" />
+  </Folder>
 </Solution>
