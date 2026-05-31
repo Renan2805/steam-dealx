@@ -3,14 +3,19 @@ using SteamDealX.Clients.Abstractions;
 using SteamDealX.Clients.Models;
 using SteamDealX.Clients.Options;
 using SteamDealX.Clients.Responses;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace SteamDealX.Clients;
 
-internal sealed class ItadClient(HttpClient httpClient, IOptions<ItadOptions> options) : IItadClient
+internal sealed class ItadClient(
+    HttpClient httpClient,
+    IOptions<ItadOptions> options,
+    ILogger<ItadClient> logger) : IItadClient
 {
     public async Task<Guid?> LookupBySteamAppIdAsync(int steamAppId, CancellationToken ct = default)
     {
+        logger.LogDebug("ITAD: looking up Steam app {SteamAppId}", steamAppId);
         // GetFromJsonAsync chama EnsureSuccessStatusCode internamente;
         // erros HTTP propagam como HttpRequestException e são mapeados pelo GlobalExceptionHandler.
         var response = await httpClient.GetFromJsonAsync<ItadLookupResponse>(
@@ -20,6 +25,7 @@ internal sealed class ItadClient(HttpClient httpClient, IOptions<ItadOptions> op
 
     public async Task<Guid?> LookupByTitleAsync(string title, CancellationToken ct = default)
     {
+        logger.LogDebug("ITAD: looking up by title \"{Title}\"", title);
         var response = await httpClient.GetFromJsonAsync<ItadLookupResponse>(
             $"games/lookup/v1?title={Uri.EscapeDataString(title)}&key={options.Value.ApiKey}", ct);
         return response?.Found == true ? response.Game?.Id : null;
@@ -34,6 +40,7 @@ internal sealed class ItadClient(HttpClient httpClient, IOptions<ItadOptions> op
 
     public async Task<Guid?> LookupBySteamSubIdAsync(int steamSubId, CancellationToken ct = default)
     {
+        logger.LogDebug("ITAD: looking up Steam sub {SteamSubId}", steamSubId);
         // Steam shop ID on ITAD = 61 (confirmed from /games/prices/v3 responses)
         var shopProductId = $"sub/{steamSubId}";
         var resp = await httpClient.PostAsJsonAsync(
@@ -55,6 +62,7 @@ internal sealed class ItadClient(HttpClient httpClient, IOptions<ItadOptions> op
 
     public async Task<Guid?> LookupBySteamBundleIdAsync(int steamBundleId, CancellationToken ct = default)
     {
+        logger.LogDebug("ITAD: looking up Steam bundle {SteamBundleId}", steamBundleId);
         var shopProductId = $"bundle/{steamBundleId}";
         var resp = await httpClient.PostAsJsonAsync(
             $"lookup/id/shop/61/v1?key={options.Value.ApiKey}",
@@ -76,6 +84,7 @@ internal sealed class ItadClient(HttpClient httpClient, IOptions<ItadOptions> op
     public async Task<IReadOnlyList<ItadBundle>> GetGameBundlesAsync(
         Guid itadUuid, string country = "BR", CancellationToken ct = default)
     {
+        logger.LogDebug("ITAD: fetching bundles for {Uuid} in {Country}", itadUuid, country);
         var items = await httpClient.GetFromJsonAsync<IReadOnlyList<ItadBundleEntry>>(
             $"games/bundles/v2?id={itadUuid}&country={country}&key={options.Value.ApiKey}", ct) ?? [];
         return items
@@ -87,6 +96,8 @@ internal sealed class ItadClient(HttpClient httpClient, IOptions<ItadOptions> op
         IReadOnlyCollection<Guid> gameIds, string country = "BR", CancellationToken ct = default)
     {
         if (gameIds.Count == 0) return new Dictionary<Guid, ItadGamePrices>();
+
+        logger.LogDebug("ITAD: fetching prices for {Count} UUID(s) in {Country}", gameIds.Count, country);
 
         var resp = await httpClient.PostAsJsonAsync(
             $"games/prices/v3?country={country}&key={options.Value.ApiKey}", gameIds, ct);

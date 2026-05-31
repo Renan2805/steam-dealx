@@ -7,6 +7,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace SteamDealX.Infrastructure.Extensions;
 
@@ -44,7 +45,8 @@ public static class ServiceCollectionExtensions
             new CachingDealsOrchestrator(
                 sp.GetRequiredService<DealsOrchestrator>(),
                 sp.GetRequiredService<HybridCache>(),
-                sp.GetRequiredService<IPopularGamesTracker>()));
+                sp.GetRequiredService<IPopularGamesTracker>(),
+                sp.GetRequiredService<ILogger<CachingDealsOrchestrator>>()));
 
         return services;
     }

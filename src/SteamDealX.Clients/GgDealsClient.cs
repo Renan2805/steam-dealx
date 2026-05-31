@@ -5,11 +5,15 @@ using SteamDealX.Clients.Abstractions;
 using SteamDealX.Clients.Models;
 using SteamDealX.Clients.Options;
 using SteamDealX.Clients.Responses;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace SteamDealX.Clients;
 
-internal sealed class GgDealsClient(HttpClient httpClient, IOptions<GgDealsOptions> options) : IGgDealsClient
+internal sealed class GgDealsClient(
+    HttpClient httpClient,
+    IOptions<GgDealsOptions> options,
+    ILogger<GgDealsClient> logger) : IGgDealsClient
 {
     // gg.deals limits: 100 records/min, 1000 records/hour.
     // Static so the budget is shared across all instances (process-wide global limiting).
@@ -57,13 +61,21 @@ internal sealed class GgDealsClient(HttpClient httpClient, IOptions<GgDealsOptio
 
         using var minuteLease = _minuteLimiter.AttemptAcquire(tokenCount);
         if (!minuteLease.IsAcquired)
+        {
+            logger.LogWarning("gg.deals: per-minute quota exceeded ({Count} tokens needed); request rejected", tokenCount);
             throw new UpstreamApiException("gg.deals", 429,
                 $"Client-side rate limit: {tokenCount} tokens would exceed the per-minute budget (100/min). Try again shortly.");
+        }
 
         using var hourLease = _hourLimiter.AttemptAcquire(tokenCount);
         if (!hourLease.IsAcquired)
+        {
+            logger.LogWarning("gg.deals: per-hour quota exceeded ({Count} tokens needed); request rejected", tokenCount);
             throw new UpstreamApiException("gg.deals", 429,
                 $"Client-side rate limit: {tokenCount} tokens would exceed the per-hour budget (1000/hour). Try again in a few minutes.");
+        }
+
+        logger.LogDebug("gg.deals: requesting {Count} ID(s) from {Endpoint} (region={Region})", tokenCount, endpoint, region);
 
         var url = $"{endpoint}?ids={string.Join(',', ids)}&key={options.Value.ApiKey}&region={region}";
 

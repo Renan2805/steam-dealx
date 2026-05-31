@@ -1,13 +1,15 @@
 using SteamDealX.Core.Abstractions;
 using SteamDealX.Core.Models;
 using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Logging;
 
 namespace SteamDealX.Infrastructure.Services;
 
 internal sealed class CachingDealsOrchestrator(
     DealsOrchestrator inner,
     HybridCache cache,
-    IPopularGamesTracker tracker) : IDealsOrchestrator
+    IPopularGamesTracker tracker,
+    ILogger<CachingDealsOrchestrator> logger) : IDealsOrchestrator
 {
     private static readonly HybridCacheEntryOptions GameOptions = new()
     {
@@ -18,14 +20,19 @@ internal sealed class CachingDealsOrchestrator(
     public async Task<AggregatedGame?> GetGameAsync(
         int steamAppId, string region = "br", CancellationToken ct = default)
     {
+        var cacheKey = $"game:{steamAppId}:{region}";
         var result = await cache.GetOrCreateAsync(
-            $"game:{steamAppId}:{region}",
-            async ct => await inner.GetGameAsync(steamAppId, region, ct),
+            cacheKey,
+            async ct =>
+            {
+                logger.LogDebug("Cache miss: {CacheKey}", cacheKey);
+                return await inner.GetGameAsync(steamAppId, region, ct);
+            },
             GameOptions,
             cancellationToken: ct);
 
         if (result is null)
-            await cache.RemoveAsync($"game:{steamAppId}:{region}", ct);
+            await cache.RemoveAsync(cacheKey, ct);
         else
             tracker.RecordAccess(steamAppId, region);
 
@@ -58,7 +65,10 @@ internal sealed class CachingDealsOrchestrator(
         }
 
         if (missing.Count == 0)
+        {
+            logger.LogDebug("Batch {Total} games: all from cache (region={Region})", steamAppIds.Count, region);
             return cached;
+        }
 
         var fetched = await inner.GetGamesBatchAsync(missing, region, ct);
 
@@ -72,20 +82,29 @@ internal sealed class CachingDealsOrchestrator(
             cached[id] = game;
         }
 
+        logger.LogInformation(
+            "Batch {Total} games: {HitCount} from cache, {MissCount} fetched upstream (region={Region})",
+            steamAppIds.Count, cached.Count - missing.Count, missing.Count, region);
+
         return cached;
     }
 
     public async Task<AggregatedBundle?> GetBundleAsync(
         int steamBundleId, string region = "br", CancellationToken ct = default)
     {
+        var cacheKey = $"bundle:{steamBundleId}:{region}";
         var result = await cache.GetOrCreateAsync(
-            $"bundle:{steamBundleId}:{region}",
-            async ct => await inner.GetBundleAsync(steamBundleId, region, ct),
+            cacheKey,
+            async ct =>
+            {
+                logger.LogDebug("Cache miss: {CacheKey}", cacheKey);
+                return await inner.GetBundleAsync(steamBundleId, region, ct);
+            },
             GameOptions,
             cancellationToken: ct);
 
         if (result is null)
-            await cache.RemoveAsync($"bundle:{steamBundleId}:{region}", ct);
+            await cache.RemoveAsync(cacheKey, ct);
 
         return result;
     }
@@ -93,14 +112,19 @@ internal sealed class CachingDealsOrchestrator(
     public async Task<AggregatedSub?> GetSubAsync(
         int steamSubId, string region = "br", CancellationToken ct = default)
     {
+        var cacheKey = $"sub:{steamSubId}:{region}";
         var result = await cache.GetOrCreateAsync(
-            $"sub:{steamSubId}:{region}",
-            async ct => await inner.GetSubAsync(steamSubId, region, ct),
+            cacheKey,
+            async ct =>
+            {
+                logger.LogDebug("Cache miss: {CacheKey}", cacheKey);
+                return await inner.GetSubAsync(steamSubId, region, ct);
+            },
             GameOptions,
             cancellationToken: ct);
 
         if (result is null)
-            await cache.RemoveAsync($"sub:{steamSubId}:{region}", ct);
+            await cache.RemoveAsync(cacheKey, ct);
 
         return result;
     }

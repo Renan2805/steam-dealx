@@ -2,10 +2,14 @@ using SteamDealX.Clients.Abstractions;
 using SteamDealX.Clients.Models;
 using SteamDealX.Core.Abstractions;
 using SteamDealX.Core.Models;
+using Microsoft.Extensions.Logging;
 
 namespace SteamDealX.Infrastructure.Services;
 
-internal sealed class DealsOrchestrator(IGgDealsClient ggDeals, IItadClient itad) : IDealsOrchestrator
+internal sealed class DealsOrchestrator(
+    IGgDealsClient ggDeals,
+    IItadClient itad,
+    ILogger<DealsOrchestrator> logger) : IDealsOrchestrator
 {
     public async Task<AggregatedGame?> GetGameAsync(
         int steamAppId, string region = "br", CancellationToken ct = default)
@@ -39,7 +43,10 @@ internal sealed class DealsOrchestrator(IGgDealsClient ggDeals, IItadClient itad
         }
 
         if (ggDealsPrices is null && itadData is null)
+        {
+            logger.LogWarning("Game not found for Steam app {SteamAppId} in region {Region}", steamAppId, region);
             return null;
+        }
 
         return Merge(steamAppId, region, ggDealsPrices, uuid, itadData, itadBundles);
     }
@@ -70,7 +77,7 @@ internal sealed class DealsOrchestrator(IGgDealsClient ggDeals, IItadClient itad
         if (uuids.Count > 0)
             itadPrices = await itad.GetPricesAsync(uuids, country, ct);
 
-        return steamAppIds.ToDictionary(
+        var results = steamAppIds.ToDictionary(
             id => id,
             id =>
             {
@@ -83,6 +90,11 @@ internal sealed class DealsOrchestrator(IGgDealsClient ggDeals, IItadClient itad
 
                 return Merge(id, region, prices, uuid, itadData);
             });
+
+        var foundCount = results.Values.Count(g => g is not null);
+        logger.LogDebug("Batch result: {Found}/{Total} games found (region={Region})", foundCount, steamAppIds.Count, region);
+
+        return results;
     }
 
     public async Task<AggregatedGame?> SearchByTitleAsync(
@@ -90,11 +102,21 @@ internal sealed class DealsOrchestrator(IGgDealsClient ggDeals, IItadClient itad
     {
         // Fase 1: ITAD resolve título → UUID
         var uuid = await itad.LookupByTitleAsync(title, ct);
-        if (uuid is null) return null;
+        if (uuid is null)
+        {
+            logger.LogWarning("Title search \"{Title}\" found no results", title);
+            return null;
+        }
 
         // Fase 2: ITAD resolve UUID → Steam App ID (null para jogos sem Steam)
         var steamAppId = await itad.GetSteamAppIdAsync(uuid.Value, ct);
-        if (steamAppId is null) return null;
+        if (steamAppId is null)
+        {
+            logger.LogWarning("Title search \"{Title}\" found no results", title);
+            return null;
+        }
+
+        logger.LogInformation("Title search \"{Title}\" resolved to Steam app {SteamAppId}", title, steamAppId.Value);
 
         // Fase 3: reutiliza o fluxo completo de lookup por App ID (inclui bundles)
         return await GetGameAsync(steamAppId.Value, region, ct);
@@ -131,7 +153,11 @@ internal sealed class DealsOrchestrator(IGgDealsClient ggDeals, IItadClient itad
                 .ToList();
         }
 
-        if (ggDealsPrices is null && itadData is null) return null;
+        if (ggDealsPrices is null && itadData is null)
+        {
+            logger.LogWarning("Sub not found for Steam sub {SteamSubId} in region {Region}", steamSubId, region);
+            return null;
+        }
 
         return MergeSub(steamSubId, region, ggDealsPrices, uuid, itadData, itadBundles);
     }
@@ -167,7 +193,11 @@ internal sealed class DealsOrchestrator(IGgDealsClient ggDeals, IItadClient itad
                 .ToList();
         }
 
-        if (ggDealsPrices is null && itadData is null) return null;
+        if (ggDealsPrices is null && itadData is null)
+        {
+            logger.LogWarning("Bundle not found for Steam bundle {SteamBundleId} in region {Region}", steamBundleId, region);
+            return null;
+        }
 
         return MergeBundle(steamBundleId, region, ggDealsPrices, uuid, itadData, itadBundles);
     }
@@ -312,4 +342,5 @@ internal sealed class DealsOrchestrator(IGgDealsClient ggDeals, IItadClient itad
             GgDealsFetchedAt: DateTimeOffset.UtcNow,
             ItadFetchedAt:    itadUuid.HasValue ? DateTimeOffset.UtcNow : null);
     }
+
 }
