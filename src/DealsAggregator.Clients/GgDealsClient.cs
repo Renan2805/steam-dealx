@@ -30,9 +30,7 @@ internal sealed class GgDealsClient(HttpClient httpClient, IOptions<GgDealsOptio
         if (!httpResponse.IsSuccessStatusCode)
         {
             var body = await httpResponse.Content.ReadAsStringAsync(ct);
-            throw new HttpRequestException(
-                $"gg.deals {endpoint} returned {(int)httpResponse.StatusCode}: {body}",
-                inner: null, httpResponse.StatusCode);
+            throw new UpstreamApiException("gg.deals", (int)httpResponse.StatusCode, body);
         }
 
         var response = await httpResponse.Content.ReadFromJsonAsync<GgDealsApiResponse>(ct)

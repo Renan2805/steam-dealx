@@ -11,6 +11,8 @@ internal sealed class ItadClient(HttpClient httpClient, IOptions<ItadOptions> op
 {
     public async Task<Guid?> LookupBySteamAppIdAsync(int steamAppId, CancellationToken ct = default)
     {
+        // GetFromJsonAsync chama EnsureSuccessStatusCode internamente;
+        // erros HTTP propagam como HttpRequestException e são mapeados pelo GlobalExceptionHandler.
         var response = await httpClient.GetFromJsonAsync<ItadLookupResponse>(
             $"games/lookup/v1?appid={steamAppId}&key={options.Value.ApiKey}", ct);
         return response?.Found == true ? response.Game?.Id : null;
@@ -30,7 +32,12 @@ internal sealed class ItadClient(HttpClient httpClient, IOptions<ItadOptions> op
 
         var resp = await httpClient.PostAsJsonAsync(
             $"games/prices/v3?country={country}&key={options.Value.ApiKey}", gameIds, ct);
-        resp.EnsureSuccessStatusCode();
+
+        if (!resp.IsSuccessStatusCode)
+        {
+            var body = await resp.Content.ReadAsStringAsync(ct);
+            throw new UpstreamApiException("IsThereAnyDeal", (int)resp.StatusCode, body);
+        }
 
         var items = await resp.Content.ReadFromJsonAsync<IReadOnlyList<ItadPricesResponse>>(cancellationToken: ct) ?? [];
 

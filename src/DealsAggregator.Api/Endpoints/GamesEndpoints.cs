@@ -1,6 +1,8 @@
+using DealsAggregator.Api.Errors;
 using DealsAggregator.Core.Abstractions;
 using DealsAggregator.Core.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 
 namespace DealsAggregator.Api.Endpoints;
 
@@ -15,14 +17,17 @@ public static class GamesEndpoints
         // ------------------------------------------------------------------ //
         // GET /games/{steamAppId}
         // ------------------------------------------------------------------ //
-        group.MapGet("/{steamAppId:int}", async Task<Results<Ok<AggregatedGame>, NotFound>> (
+        group.MapGet("/{steamAppId:int}", async Task<Results<Ok<AggregatedGame>, ProblemHttpResult>> (
             int steamAppId,
             string? region,
             IDealsOrchestrator orchestrator,
             CancellationToken ct) =>
         {
             var game = await orchestrator.GetGameAsync(steamAppId, region ?? "br", ct);
-            return game is null ? TypedResults.NotFound() : TypedResults.Ok(game);
+            return game is null
+                ? Problem(StatusCodes.Status404NotFound, ErrorCodes.GameNotFound,
+                    "Game Not Found", $"No data found for Steam App ID {steamAppId}.")
+                : TypedResults.Ok(game);
         })
         .WithName("GetGame")
         .WithSummary("Preços agregados de um jogo")
@@ -41,19 +46,24 @@ public static class GamesEndpoints
 
             **Região:** código de duas letras minúsculas (ex: `br`, `us`, `eu`, `de`). Default: `br`.
             Afeta os preços retornados e a moeda.
-            """);
+            """)
+        .Produces<AggregatedGame>(200)
+        .ProducesProblem(404)
+        .ProducesProblem(429)
+        .ProducesProblem(502);
 
         // ------------------------------------------------------------------ //
-        // GET /games/batch?ids=730,440,1245620
+        // GET /games/batch?ids=730&ids=440&ids=1245620
         // ------------------------------------------------------------------ //
-        group.MapGet("/batch", async Task<Results<Ok<IReadOnlyDictionary<int, AggregatedGame?>>, BadRequest<string>>> (
+        group.MapGet("/batch", async Task<Results<Ok<IReadOnlyDictionary<int, AggregatedGame?>>, ProblemHttpResult>> (
             int[]? ids,
             string? region,
             IDealsOrchestrator orchestrator,
             CancellationToken ct) =>
         {
             if (ids is null or { Length: 0 })
-                return TypedResults.BadRequest("ids query parameter is required");
+                return Problem(StatusCodes.Status400BadRequest, ErrorCodes.ValidationError,
+                    "Validation Error", "Query parameter 'ids' is required.");
 
             var results = await orchestrator.GetGamesBatchAsync(
                 ids.Take(100).ToArray(), region ?? "br", ct);
@@ -64,52 +74,67 @@ public static class GamesEndpoints
         .WithDescription("""
             Busca dados agregados para até **100 jogos** em uma única chamada.
 
-            **Parâmetro `ids`:** Steam App IDs separados por `&ids=` repetido ou vírgula.
-            Exemplo: `?ids=730&ids=440&ids=1245620` ou `?ids=730,440,1245620`.
-            Máximo de 100 IDs por requisição (limite imposto pelo gg.deals).
+            **Parâmetro `ids`:** Steam App IDs repetindo o parâmetro ou separados por vírgula.
+            Exemplo: `?ids=730&ids=440&ids=1245620`.
+            Máximo de 100 IDs por requisição (limite do gg.deals).
 
             **Resposta:** dicionário `{ steamAppId: AggregatedGame | null }`.
             O valor é `null` quando o jogo não foi encontrado em nenhuma das fontes.
 
             **Cache inteligente:** IDs já em cache são servidos diretamente;
-            apenas os IDs ausentes são buscados nas APIs upstream. Isso minimiza
+            apenas os IDs ausentes são buscados nas APIs upstream, minimizando
             o consumo de cota do gg.deals (100 registros/min, 1000/hora).
-
-            **Uso típico:** página de wishlist ou lista de jogos da biblioteca Steam,
-            onde múltiplos App IDs precisam ser comparados de uma vez.
-            """);
+            """)
+        .Produces<IReadOnlyDictionary<int, AggregatedGame?>>(200)
+        .ProducesProblem(400)
+        .ProducesProblem(429)
+        .ProducesProblem(502);
 
         // ------------------------------------------------------------------ //
         // GET /games/search?title=Elden+Ring
         // ------------------------------------------------------------------ //
-        group.MapGet("/search", async Task<Results<Ok<AggregatedGame>, NotFound, BadRequest<string>>> (
+        group.MapGet("/search", async Task<Results<Ok<AggregatedGame>, ProblemHttpResult>> (
             string? title,
             string? region,
             IDealsOrchestrator orchestrator,
             CancellationToken ct) =>
         {
             if (string.IsNullOrWhiteSpace(title))
-                return TypedResults.BadRequest("title query parameter is required");
+                return Problem(StatusCodes.Status400BadRequest, ErrorCodes.ValidationError,
+                    "Validation Error", "Query parameter 'title' is required.");
 
             var game = await orchestrator.SearchByTitleAsync(title, region ?? "br", ct);
-            return game is null ? TypedResults.NotFound() : TypedResults.Ok(game);
+            return game is null
+                ? Problem(StatusCodes.Status404NotFound, ErrorCodes.GameNotFound,
+                    "Game Not Found", $"No game matching '{title}' was found.")
+                : TypedResults.Ok(game);
         })
         .WithName("SearchGame")
         .WithSummary("Busca jogo por título")
         .WithDescription("""
             Resolve um título de jogo via IsThereAnyDeal e retorna os preços agregados.
 
-            **Atenção:** a busca do ITAD é por correspondência exata de título (não é busca fuzzy).
+            **Atenção:** a busca é por correspondência exata de título (não é busca fuzzy).
             Erros de digitação ou variações no nome podem não retornar resultado.
-            Para títulos com espaços, encode como `+` ou `%20`.
 
-            Exemplo: `?title=Elden+Ring`, `?title=Counter-Strike+2`.
-
-            **⚠️ Não implementado:** este endpoint ainda não está funcional.
-            A resolução de título → Steam App ID requer um passo adicional no ITAD
-            que ainda não foi implementado. Retorna `501 Not Implemented`.
-            """);
+            **⚠️ Não implementado:** este endpoint ainda não está funcional (retorna 501).
+            """)
+        .Produces<AggregatedGame>(200)
+        .ProducesProblem(400)
+        .ProducesProblem(404)
+        .ProducesProblem(429)
+        .ProducesProblem(501)
+        .ProducesProblem(502);
 
         return app;
     }
+
+    private static ProblemHttpResult Problem(int status, string code, string title, string detail) =>
+        TypedResults.Problem(new ProblemDetails
+        {
+            Status     = status,
+            Title      = title,
+            Detail     = detail,
+            Extensions = { ["code"] = code }
+        });
 }
