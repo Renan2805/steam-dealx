@@ -159,6 +159,55 @@ public class GgDealsClientTests
         Assert.Contains("key=secret", url);
     }
 
+    [Fact]
+    public async Task GetSubPricesAsync_KnownSub_ReturnsMappedPrices()
+    {
+        const string json = """
+            {
+              "success": true,
+              "data": {
+                "518699": {
+                  "title": "Counter-Strike 2 - Prime Status Upgrade",
+                  "url": "https://gg.deals/pack/counter-strike-2-prime-status-upgrade/",
+                  "prices": {
+                    "currentRetail": "13.99",
+                    "currentKeyshops": "5.50",
+                    "historicalRetail": "9.99",
+                    "historicalKeyshops": "3.20",
+                    "currency": "USD"
+                  }
+                }
+              }
+            }
+            """;
+
+        var result = await CreateClient(json).GetSubPricesAsync([518699], "us");
+
+        Assert.Single(result);
+        var prices = result[518699];
+        Assert.NotNull(prices);
+        Assert.Equal("Counter-Strike 2 - Prime Status Upgrade", prices.Title);
+        Assert.Equal(13.99m, prices.CurrentRetail);
+        Assert.Equal(5.50m, prices.CurrentKeyshops);
+    }
+
+    [Fact]
+    public async Task GetSubPricesAsync_BuildsCorrectEndpoint()
+    {
+        const string json = """{"success": true, "data": {}}""";
+        var handler = new FakeHttpMessageHandler(json);
+        var client = new GgDealsClient(
+            new HttpClient(handler) { BaseAddress = new Uri(BaseUrl) },
+            Create(new GgDealsOptions { ApiKey = "secret" }));
+
+        await client.GetSubPricesAsync([518699], "br");
+
+        var url = handler.LastRequest!.RequestUri!.ToString();
+        Assert.Contains("by-steam-sub-id", url);
+        Assert.Contains("ids=518699", url);
+        Assert.Contains("key=secret", url);
+    }
+
     private static GgDealsClient CreateClient(string json, HttpStatusCode status = HttpStatusCode.OK) =>
         new(new HttpClient(new FakeHttpMessageHandler(json, status)) { BaseAddress = new Uri(BaseUrl) },
             Create(new GgDealsOptions { ApiKey = "test" }));

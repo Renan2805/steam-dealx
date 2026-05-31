@@ -15,4 +15,10 @@ public interface IGgDealsClient
         IReadOnlyCollection<int> steamBundleIds,
         string region = "br",
         CancellationToken ct = default);
+
+    // Até 100 Steam Sub IDs por chamada (store.steampowered.com/sub/{id}/)
+    Task<IReadOnlyDictionary<int, GgDealsPrices?>> GetSubPricesAsync(
+        IReadOnlyCollection<int> steamSubIds,
+        string region = "br",
+        CancellationToken ct = default);
 }

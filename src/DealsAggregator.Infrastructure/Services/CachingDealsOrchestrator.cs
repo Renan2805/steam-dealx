@@ -90,6 +90,21 @@ internal sealed class CachingDealsOrchestrator(
         return result;
     }
 
+    public async Task<SubPrices?> GetSubAsync(
+        int steamSubId, string region = "br", CancellationToken ct = default)
+    {
+        var result = await cache.GetOrCreateAsync(
+            $"sub:{steamSubId}:{region}",
+            async ct => await inner.GetSubAsync(steamSubId, region, ct),
+            GameOptions,
+            cancellationToken: ct);
+
+        if (result is null)
+            await cache.RemoveAsync($"sub:{steamSubId}:{region}", ct);
+
+        return result;
+    }
+
     public async Task<AggregatedGame?> SearchByTitleAsync(
         string title, string region = "br", CancellationToken ct = default)
     {

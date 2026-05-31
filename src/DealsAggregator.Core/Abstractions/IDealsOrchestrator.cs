@@ -15,4 +15,7 @@ public interface IDealsOrchestrator
 
     Task<BundlePrices?> GetBundleAsync(
         int steamBundleId, string region = "br", CancellationToken ct = default);
+
+    Task<SubPrices?> GetSubAsync(
+        int steamSubId, string region = "br", CancellationToken ct = default);
 }

@@ -41,6 +41,10 @@ internal sealed class GgDealsClient(HttpClient httpClient, IOptions<GgDealsOptio
         IReadOnlyCollection<int> steamBundleIds, string region = "br", CancellationToken ct = default) =>
         FetchAsync("prices/by-steam-bundle-id/", steamBundleIds, region, ct);
 
+    public Task<IReadOnlyDictionary<int, GgDealsPrices?>> GetSubPricesAsync(
+        IReadOnlyCollection<int> steamSubIds, string region = "br", CancellationToken ct = default) =>
+        FetchAsync("prices/by-steam-sub-id/", steamSubIds, region, ct);
+
     private async Task<IReadOnlyDictionary<int, GgDealsPrices?>> FetchAsync(
         string endpoint, IReadOnlyCollection<int> ids, string region, CancellationToken ct)
     {
