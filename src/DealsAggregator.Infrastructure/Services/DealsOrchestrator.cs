@@ -73,10 +73,20 @@ internal sealed class DealsOrchestrator(IGgDealsClient ggDeals, IItadClient itad
             });
     }
 
-    public Task<AggregatedGame?> SearchByTitleAsync(
+    public async Task<AggregatedGame?> SearchByTitleAsync(
         string title, string region = "br", CancellationToken ct = default)
-        => throw new NotImplementedException(
-            "Title search requires resolving ITAD UUID back to Steam App ID — not yet implemented.");
+    {
+        // Fase 1: ITAD resolve título → UUID
+        var uuid = await itad.LookupByTitleAsync(title, ct);
+        if (uuid is null) return null;
+
+        // Fase 2: ITAD resolve UUID → Steam App ID (null para jogos sem Steam)
+        var steamAppId = await itad.GetSteamAppIdAsync(uuid.Value, ct);
+        if (steamAppId is null) return null;
+
+        // Fase 3: reutiliza o fluxo completo de lookup por App ID
+        return await GetGameAsync(steamAppId.Value, region, ct);
+    }
 
     // ---------------------------------------------------------------------------
 

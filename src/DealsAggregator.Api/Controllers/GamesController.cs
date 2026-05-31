@@ -84,10 +84,16 @@ public sealed class GamesController(IDealsOrchestrator orchestrator) : BaseApiCo
     /// Resolve um título de jogo via IsThereAnyDeal e retorna os preços agregados.
     /// </summary>
     /// <remarks>
+    /// **Fluxo:** título → ITAD UUID (`/games/lookup/v1`) → Steam App ID (`/games/info/v2`) → preços agregados.
+    ///
     /// **Atenção:** a busca é por correspondência exata de título (não é fuzzy).
     /// Erros de digitação ou variações no nome podem não retornar resultado.
     ///
-    /// **⚠️ Não implementado:** este endpoint ainda não está funcional (retorna 501).
+    /// Jogos sem presença na Steam (exclusivos GOG, Epic, etc.) retornam 404,
+    /// pois o gg.deals usa Steam App ID como identificador primário.
+    ///
+    /// O resultado é cacheado sob a chave do Steam App ID — lookups diretos
+    /// posteriores para o mesmo jogo retornam instantaneamente do cache.
     /// </remarks>
     [HttpGet("search")]
     [EndpointSummary("Busca jogo por título")]
@@ -95,7 +101,6 @@ public sealed class GamesController(IDealsOrchestrator orchestrator) : BaseApiCo
     [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest, ProblemJson)]
     [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound, ProblemJson)]
     [ProducesResponseType(typeof(ApiError), StatusCodes.Status429TooManyRequests, ProblemJson)]
-    [ProducesResponseType(typeof(ApiError), StatusCodes.Status501NotImplemented, ProblemJson)]
     [ProducesResponseType(typeof(ApiError), StatusCodes.Status502BadGateway, ProblemJson)]
     public async Task<IActionResult> SearchGame(
         string? title,

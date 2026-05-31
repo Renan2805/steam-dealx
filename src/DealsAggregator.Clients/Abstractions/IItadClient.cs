@@ -7,6 +7,9 @@ public interface IItadClient
     Task<Guid?> LookupBySteamAppIdAsync(int steamAppId, CancellationToken ct = default);
     Task<Guid?> LookupByTitleAsync(string title, CancellationToken ct = default);
 
+    // Resolve UUID ITAD → Steam App ID via /games/info/v2. Retorna null para jogos sem Steam.
+    Task<int?> GetSteamAppIdAsync(Guid itadUuid, CancellationToken ct = default);
+
     // Retorna deals + historyLow.all por UUID — historyLow já vem embutido na resposta de /prices/v3
     Task<IReadOnlyDictionary<Guid, ItadGamePrices>> GetPricesAsync(
         IReadOnlyCollection<Guid> gameIds,

@@ -75,7 +75,20 @@ internal sealed class CachingDealsOrchestrator(
         return cached;
     }
 
-    public Task<AggregatedGame?> SearchByTitleAsync(
+    public async Task<AggregatedGame?> SearchByTitleAsync(
         string title, string region = "br", CancellationToken ct = default)
-        => inner.SearchByTitleAsync(title, region, ct);
+    {
+        var game = await inner.SearchByTitleAsync(title, region, ct);
+
+        // Grava no cache sob a chave do App ID para que lookups diretos subsequentes
+        // também se beneficiem do cache (sem chamar as APIs novamente)
+        if (game is not null)
+        {
+            await cache.SetAsync(
+                $"game:{game.SteamAppId}:{region}", game, GameOptions, cancellationToken: ct);
+            tracker.RecordAccess(game.SteamAppId, region);
+        }
+
+        return game;
+    }
 }

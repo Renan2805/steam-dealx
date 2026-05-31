@@ -135,6 +135,28 @@ public class ItadClientTests
         Assert.Empty(result);
     }
 
+    [Fact]
+    public async Task GetSteamAppIdAsync_SteamGame_ReturnsSteamAppId()
+    {
+        // /games/info/v2 retorna appid quando o jogo está na Steam
+        const string json = """{"appid": 220}""";
+
+        var result = await CreateClient(json).GetSteamAppIdAsync(GameId1);
+
+        Assert.Equal(220, result);
+    }
+
+    [Fact]
+    public async Task GetSteamAppIdAsync_NonSteamGame_ReturnsNull()
+    {
+        // Jogos exclusivos GOG/Epic têm appid: null no ITAD
+        const string json = """{"appid": null}""";
+
+        var result = await CreateClient(json).GetSteamAppIdAsync(GameId1);
+
+        Assert.Null(result);
+    }
+
     private static ItadClient CreateClient(string json, HttpStatusCode status = HttpStatusCode.OK) =>
         new(new HttpClient(new FakeHttpMessageHandler(json, status)) { BaseAddress = new Uri(BaseUrl) },
             Create(new ItadOptions { ApiKey = "test" }));

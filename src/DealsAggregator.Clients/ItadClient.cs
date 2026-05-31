@@ -25,6 +25,13 @@ internal sealed class ItadClient(HttpClient httpClient, IOptions<ItadOptions> op
         return response?.Found == true ? response.Game?.Id : null;
     }
 
+    public async Task<int?> GetSteamAppIdAsync(Guid itadUuid, CancellationToken ct = default)
+    {
+        var response = await httpClient.GetFromJsonAsync<ItadGameInfoResponse>(
+            $"games/info/v2?id={itadUuid}&key={options.Value.ApiKey}", ct);
+        return response?.Appid;
+    }
+
     public async Task<IReadOnlyDictionary<Guid, ItadGamePrices>> GetPricesAsync(
         IReadOnlyCollection<Guid> gameIds, string country = "BR", CancellationToken ct = default)
     {
