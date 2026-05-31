@@ -13,6 +13,7 @@ builder.Services.AddDealsAggregatorInfrastructure(builder.Configuration);
 
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddHealthChecks();
 
 builder.Services.AddControllers()
     .ConfigureApiBehaviorOptions(options =>
@@ -42,9 +43,16 @@ builder.Services.AddControllers()
 
 builder.Services.AddCors(options =>
     options.AddDefaultPolicy(policy =>
-        policy.WithOrigins(builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? [])
-              .AllowAnyHeader()
-              .AllowAnyMethod()));
+    {
+        var origins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? [];
+        // "*" em Development permite qualquer origem (incluindo extensões Chrome em teste).
+        // Em produção, configurar com o ID real da extensão: chrome-extension://<id>
+        if (origins.Contains("*"))
+            policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+        else if (origins.Length > 0)
+            policy.WithOrigins(origins).AllowAnyHeader().AllowAnyMethod();
+        // else: origins não configuradas → nenhuma request cross-origin permitida (seguro por padrão)
+    }));
 
 builder.Services.AddRateLimiter(options =>
 {
@@ -84,5 +92,6 @@ app.Services.EnsureDatabase();
 app.UseCors();
 app.UseRateLimiter();
 app.MapControllers();
+app.MapHealthChecks("/health").AllowAnonymous();
 
 app.Run();

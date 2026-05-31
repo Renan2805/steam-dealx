@@ -4,6 +4,7 @@ using DealsAggregator.Infrastructure.Persistence;
 using DealsAggregator.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -31,12 +32,19 @@ public static class ServiceCollectionExtensions
             };
         });
 
+        // Tracker de popularidade: singleton para sobreviver entre requests
+        services.AddSingleton<IPopularGamesTracker, PopularGamesTracker>();
+
+        // BackgroundService de reaquecimento de cache
+        services.AddHostedService<CacheWarmupService>();
+
         // Decorator: CachingDealsOrchestrator envolve DealsOrchestrator
         services.AddScoped<DealsOrchestrator>();
         services.AddScoped<IDealsOrchestrator>(sp =>
             new CachingDealsOrchestrator(
                 sp.GetRequiredService<DealsOrchestrator>(),
-                sp.GetRequiredService<Microsoft.Extensions.Caching.Hybrid.HybridCache>()));
+                sp.GetRequiredService<HybridCache>(),
+                sp.GetRequiredService<IPopularGamesTracker>()));
 
         return services;
     }

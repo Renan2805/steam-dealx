@@ -4,7 +4,10 @@ using Microsoft.Extensions.Caching.Hybrid;
 
 namespace DealsAggregator.Infrastructure.Services;
 
-internal sealed class CachingDealsOrchestrator(DealsOrchestrator inner, HybridCache cache) : IDealsOrchestrator
+internal sealed class CachingDealsOrchestrator(
+    DealsOrchestrator inner,
+    HybridCache cache,
+    IPopularGamesTracker tracker) : IDealsOrchestrator
 {
     private static readonly HybridCacheEntryOptions GameOptions = new()
     {
@@ -21,9 +24,10 @@ internal sealed class CachingDealsOrchestrator(DealsOrchestrator inner, HybridCa
             GameOptions,
             cancellationToken: ct);
 
-        // Não cacheia null: retorna o valor mas descarta a entrada se for null
         if (result is null)
             await cache.RemoveAsync($"game:{steamAppId}:{region}", ct);
+        else
+            tracker.RecordAccess(steamAppId, region);
 
         return result;
     }
@@ -31,8 +35,6 @@ internal sealed class CachingDealsOrchestrator(DealsOrchestrator inner, HybridCa
     public async Task<IReadOnlyDictionary<int, AggregatedGame?>> GetGamesBatchAsync(
         IReadOnlyCollection<int> steamAppIds, string region = "br", CancellationToken ct = default)
     {
-        // Verifica o cache individualmente para cada ID e chama o orquestrador
-        // apenas para os que tiveram cache miss — preserva o budget das APIs.
         var cached  = new Dictionary<int, AggregatedGame?>();
         var missing = new List<int>();
 
@@ -40,27 +42,33 @@ internal sealed class CachingDealsOrchestrator(DealsOrchestrator inner, HybridCa
         {
             var hit = await cache.GetOrCreateAsync<AggregatedGame?>(
                 $"game:{id}:{region}",
-                _ => ValueTask.FromResult<AggregatedGame?>(null),   // factory vazia — só lê
+                _ => ValueTask.FromResult<AggregatedGame?>(null),
                 GameOptions,
                 cancellationToken: ct);
 
             if (hit is not null)
+            {
                 cached[id] = hit;
+                tracker.RecordAccess(id, region);
+            }
             else
+            {
                 missing.Add(id);
+            }
         }
 
         if (missing.Count == 0)
             return cached;
 
-        // Busca apenas os IDs ausentes e grava no cache individualmente
         var fetched = await inner.GetGamesBatchAsync(missing, region, ct);
 
         foreach (var (id, game) in fetched)
         {
             if (game is not null)
+            {
                 await cache.SetAsync($"game:{id}:{region}", game, GameOptions, cancellationToken: ct);
-
+                tracker.RecordAccess(id, region);
+            }
             cached[id] = game;
         }
 
