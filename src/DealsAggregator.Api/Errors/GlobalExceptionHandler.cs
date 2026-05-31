@@ -1,7 +1,7 @@
 using System.Net;
+using System.Net.Mime;
 using DealsAggregator.Clients;
 using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
 
 namespace DealsAggregator.Api.Errors;
 
@@ -46,15 +46,17 @@ internal sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> log
         logger.LogError(exception,
             "Unhandled {ExceptionType} → {Code} ({Status})", exception.GetType().Name, code, status);
 
-        httpContext.Response.StatusCode = status;
+        httpContext.Response.StatusCode  = status;
+        httpContext.Response.ContentType = "application/problem+json";
 
-        await httpContext.Response.WriteAsJsonAsync(new ProblemDetails
+        await httpContext.Response.WriteAsJsonAsync(new ApiError
         {
+            Type     = $"https://tools.ietf.org/html/rfc9110#section-15.{status / 100}.{status % 100 / 10}",
             Status   = status,
             Title    = title,
             Detail   = detail,
             Instance = httpContext.Request.Path,
-            Extensions = { ["code"] = code }
+            Code     = code
         }, ct);
 
         return true;

@@ -2,7 +2,6 @@ using DealsAggregator.Api.Endpoints;
 using DealsAggregator.Api.Errors;
 using DealsAggregator.Clients.Extensions;
 using DealsAggregator.Infrastructure.Extensions;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Scalar.AspNetCore;
 
@@ -34,13 +33,14 @@ builder.Services.AddRateLimiter(options =>
     {
         ctx.HttpContext.Response.StatusCode  = StatusCodes.Status429TooManyRequests;
         ctx.HttpContext.Response.ContentType = "application/problem+json";
-        await ctx.HttpContext.Response.WriteAsJsonAsync(new ProblemDetails
+        await ctx.HttpContext.Response.WriteAsJsonAsync(new ApiError
         {
-            Status     = 429,
-            Title      = "Too Many Requests",
-            Detail     = "API rate limit exceeded. Try again in a moment.",
-            Instance   = ctx.HttpContext.Request.Path,
-            Extensions = { ["code"] = ErrorCodes.RateLimited }
+            Type     = "https://tools.ietf.org/html/rfc9110#section-15.5.29",
+            Status   = 429,
+            Title    = "Too Many Requests",
+            Detail   = "API rate limit exceeded. Try again in a moment.",
+            Instance = ctx.HttpContext.Request.Path,
+            Code     = ErrorCodes.RateLimited
         }, ct);
     };
 });
