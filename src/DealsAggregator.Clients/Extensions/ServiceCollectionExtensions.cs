@@ -2,6 +2,7 @@ using DealsAggregator.Clients.Abstractions;
 using DealsAggregator.Clients.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace DealsAggregator.Clients.Extensions;
 
@@ -14,11 +15,17 @@ public static class ServiceCollectionExtensions
         services.Configure<GgDealsOptions>(configuration.GetSection(GgDealsOptions.Section));
         services.Configure<ItadOptions>(configuration.GetSection(ItadOptions.Section));
 
-        services.AddHttpClient<IGgDealsClient, GgDealsClient>()
-            .AddStandardResilienceHandler();
+        services.AddHttpClient<IGgDealsClient, GgDealsClient>((sp, client) =>
+        {
+            client.BaseAddress = new Uri(sp.GetRequiredService<IOptions<GgDealsOptions>>().Value.BaseUrl);
+        })
+        .AddStandardResilienceHandler();
 
-        services.AddHttpClient<IItadClient, ItadClient>()
-            .AddStandardResilienceHandler();
+        services.AddHttpClient<IItadClient, ItadClient>((sp, client) =>
+        {
+            client.BaseAddress = new Uri(sp.GetRequiredService<IOptions<ItadOptions>>().Value.BaseUrl);
+        })
+        .AddStandardResilienceHandler();
 
         return services;
     }
