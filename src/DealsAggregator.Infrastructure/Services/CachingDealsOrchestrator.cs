@@ -75,6 +75,21 @@ internal sealed class CachingDealsOrchestrator(
         return cached;
     }
 
+    public async Task<BundlePrices?> GetBundleAsync(
+        int steamBundleId, string region = "br", CancellationToken ct = default)
+    {
+        var result = await cache.GetOrCreateAsync(
+            $"bundle:{steamBundleId}:{region}",
+            async ct => await inner.GetBundleAsync(steamBundleId, region, ct),
+            GameOptions,
+            cancellationToken: ct);
+
+        if (result is null)
+            await cache.RemoveAsync($"bundle:{steamBundleId}:{region}", ct);
+
+        return result;
+    }
+
     public async Task<AggregatedGame?> SearchByTitleAsync(
         string title, string region = "br", CancellationToken ct = default)
     {

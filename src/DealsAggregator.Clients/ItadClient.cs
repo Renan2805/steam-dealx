@@ -32,6 +32,16 @@ internal sealed class ItadClient(HttpClient httpClient, IOptions<ItadOptions> op
         return response?.Appid;
     }
 
+    public async Task<IReadOnlyList<ItadBundle>> GetGameBundlesAsync(
+        Guid itadUuid, string country = "BR", CancellationToken ct = default)
+    {
+        var items = await httpClient.GetFromJsonAsync<IReadOnlyList<ItadBundleEntry>>(
+            $"games/bundles/v2?id={itadUuid}&country={country}&key={options.Value.ApiKey}", ct) ?? [];
+        return items
+            .Select(b => new ItadBundle(b.Title, b.Url, b.Page?.Name ?? string.Empty))
+            .ToList();
+    }
+
     public async Task<IReadOnlyDictionary<Guid, ItadGamePrices>> GetPricesAsync(
         IReadOnlyCollection<Guid> gameIds, string country = "BR", CancellationToken ct = default)
     {

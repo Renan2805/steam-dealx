@@ -157,6 +157,41 @@ public class ItadClientTests
         Assert.Null(result);
     }
 
+    [Fact]
+    public async Task GetGameBundlesAsync_GameInBundles_ReturnsMappedBundles()
+    {
+        const string json = """
+            [
+              {
+                "id": 1234,
+                "title": "Humble Monthly Bundle",
+                "page": {"id": 8, "name": "Humble Bundle", "shopId": 6},
+                "url": "https://www.humblebundle.com/monthly",
+                "isMature": false,
+                "publish": "2024-01-01T00:00:00Z",
+                "expiry": "2024-01-31T00:00:00Z",
+                "note": null,
+                "counts": {"games": 10, "media": 0},
+                "tiers": []
+              }
+            ]
+            """;
+
+        var result = await CreateClient(json).GetGameBundlesAsync(GameId1, "US");
+
+        Assert.Single(result);
+        Assert.Equal("Humble Monthly Bundle", result[0].Title);
+        Assert.Equal("https://www.humblebundle.com/monthly", result[0].Url);
+        Assert.Equal("Humble Bundle", result[0].Store);
+    }
+
+    [Fact]
+    public async Task GetGameBundlesAsync_NoBundles_ReturnsEmpty()
+    {
+        var result = await CreateClient("[]").GetGameBundlesAsync(GameId1, "US");
+        Assert.Empty(result);
+    }
+
     private static ItadClient CreateClient(string json, HttpStatusCode status = HttpStatusCode.OK) =>
         new(new HttpClient(new FakeHttpMessageHandler(json, status)) { BaseAddress = new Uri(BaseUrl) },
             Create(new ItadOptions { ApiKey = "test" }));
