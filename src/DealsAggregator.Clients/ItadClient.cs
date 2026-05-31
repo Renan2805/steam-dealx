@@ -23,10 +23,10 @@ internal sealed class ItadClient(HttpClient httpClient, IOptions<ItadOptions> op
         return response?.Found == true ? response.Game?.Id : null;
     }
 
-    public async Task<IReadOnlyList<ItadStorePrice>> GetPricesAsync(
+    public async Task<IReadOnlyDictionary<Guid, IReadOnlyList<ItadStorePrice>>> GetPricesAsync(
         IReadOnlyCollection<Guid> gameIds, string country = "BR", CancellationToken ct = default)
     {
-        if (gameIds.Count == 0) return [];
+        if (gameIds.Count == 0) return new Dictionary<Guid, IReadOnlyList<ItadStorePrice>>();
 
         var resp = await httpClient.PostAsJsonAsync(
             $"games/prices/v3?country={country}&key={options.Value.ApiKey}", gameIds, ct);
@@ -34,29 +34,28 @@ internal sealed class ItadClient(HttpClient httpClient, IOptions<ItadOptions> op
 
         var items = await resp.Content.ReadFromJsonAsync<IReadOnlyList<ItadPricesResponse>>(cancellationToken: ct) ?? [];
 
-        return items
-            .SelectMany(r => r.Deals.Select(d => new ItadStorePrice(
-                d.Shop.Name,
-                d.Price.Amount,
-                d.Regular?.Amount,
-                d.Cut,
-                d.Url)))
-            .ToList();
+        return items.ToDictionary(
+            r => r.Id,
+            r => (IReadOnlyList<ItadStorePrice>)r.Deals
+                .Select(d => new ItadStorePrice(d.Shop.Name, d.Price.Amount, d.Regular?.Amount, d.Cut, d.Url))
+                .ToList());
     }
 
-    public async Task<ItadHistoryLow?> GetHistoryLowAsync(
-        Guid gameId, string country = "BR", CancellationToken ct = default)
+    public async Task<IReadOnlyDictionary<Guid, ItadHistoryLow?>> GetHistoryLowAsync(
+        IReadOnlyCollection<Guid> gameIds, string country = "BR", CancellationToken ct = default)
     {
+        if (gameIds.Count == 0) return new Dictionary<Guid, ItadHistoryLow?>();
+
         var resp = await httpClient.PostAsJsonAsync(
-            $"games/historylow/v1?country={country}&key={options.Value.ApiKey}",
-            new[] { gameId }, ct);
+            $"games/historylow/v1?country={country}&key={options.Value.ApiKey}", gameIds, ct);
         resp.EnsureSuccessStatusCode();
 
         var items = await resp.Content.ReadFromJsonAsync<IReadOnlyList<ItadHistoryLowResponse>>(cancellationToken: ct) ?? [];
-        var item = items.FirstOrDefault(r => r.Id == gameId);
 
-        return item?.Low is null
-            ? null
-            : new ItadHistoryLow(item.Low.Price.Amount, item.Low.Price.Currency, item.Low.Timestamp);
+        return items.ToDictionary(
+            r => r.Id,
+            r => r.Low is null
+                ? (ItadHistoryLow?)null
+                : new ItadHistoryLow(r.Low.Price.Amount, r.Low.Price.Currency, r.Low.Timestamp));
     }
 }

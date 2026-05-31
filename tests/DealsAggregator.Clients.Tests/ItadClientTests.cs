@@ -8,7 +8,6 @@ public class ItadClientTests
 {
     private const string BaseUrl = "https://api.isthereanydeal.com/";
 
-    // Fixed GUIDs used as constants in both JSON and assertions
     private static readonly Guid GameId1 = Guid.Parse("3d3a3c00-0000-0000-0000-000000000001");
     private static readonly Guid GameId2 = Guid.Parse("3d3a3c00-0000-0000-0000-000000000002");
     private static readonly Guid GameId3 = Guid.Parse("3d3a3c00-0000-0000-0000-000000000003");
@@ -63,7 +62,7 @@ public class ItadClientTests
     }
 
     [Fact]
-    public async Task GetPricesAsync_ReturnsMappedDeals()
+    public async Task GetPricesAsync_ReturnsDealsByUuid()
     {
         const string json = """
             [
@@ -85,7 +84,8 @@ public class ItadClientTests
         var result = await CreateClient(json).GetPricesAsync([GameId3], "US");
 
         Assert.Single(result);
-        var deal = result[0];
+        Assert.True(result.ContainsKey(GameId3));
+        var deal = result[GameId3].Single();
         Assert.Equal("Steam", deal.Shop);
         Assert.Equal(4.99m, deal.Price);
         Assert.Equal(9.99m, deal.Regular);
@@ -100,7 +100,7 @@ public class ItadClientTests
     }
 
     [Fact]
-    public async Task GetHistoryLowAsync_Found_ReturnsHistoryLow()
+    public async Task GetHistoryLowAsync_Found_ReturnsHistoryLowByUuid()
     {
         const string json = """
             [
@@ -117,19 +117,21 @@ public class ItadClientTests
             ]
             """;
 
-        var result = await CreateClient(json).GetHistoryLowAsync(GameId4, "US");
+        var result = await CreateClient(json).GetHistoryLowAsync([GameId4], "US");
 
-        Assert.NotNull(result);
-        Assert.Equal(2.49m, result.Amount);
-        Assert.Equal("USD", result.Currency);
-        Assert.NotNull(result.Timestamp);
+        Assert.Single(result);
+        var low = result[GameId4];
+        Assert.NotNull(low);
+        Assert.Equal(2.49m, low.Amount);
+        Assert.Equal("USD", low.Currency);
+        Assert.NotNull(low.Timestamp);
     }
 
     [Fact]
-    public async Task GetHistoryLowAsync_GameNotInResponse_ReturnsNull()
+    public async Task GetHistoryLowAsync_EmptyIds_ReturnsEmpty()
     {
-        var result = await CreateClient("[]").GetHistoryLowAsync(Guid.NewGuid(), "US");
-        Assert.Null(result);
+        var result = await CreateClient("[]").GetHistoryLowAsync([]);
+        Assert.Empty(result);
     }
 
     private static ItadClient CreateClient(string json, HttpStatusCode status = HttpStatusCode.OK) =>

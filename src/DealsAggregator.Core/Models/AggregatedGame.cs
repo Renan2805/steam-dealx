@@ -3,11 +3,10 @@ namespace DealsAggregator.Core.Models;
 public sealed record AggregatedGame(
     int SteamAppId,
     string Title,
+    string GgDealsUrl,
     Guid? ItadUuid,
     IReadOnlyList<GameOffer> Offers,
-    decimal? HistoricalRetailLow,
-    decimal? HistoricalKeyshopLow,
-    decimal? ItadHistoricalLow,
+    decimal? HistoricalLow,
     IReadOnlyList<ActiveBundle> Bundles,
     string Currency,
     string Region,
