@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SteamDealX.Clients\SteamDealX.Clients.csproj" />
+    <ProjectReference Include="..\SteamDealX.Core\SteamDealX.Core.csproj" />
     <ProjectReference Include="..\SteamDealX.Infrastructure\SteamDealX.Infrastructure.csproj" />
   </ItemGroup>
 

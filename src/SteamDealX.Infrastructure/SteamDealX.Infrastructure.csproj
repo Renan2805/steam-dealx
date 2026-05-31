@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SteamDealX.Clients\SteamDealX.Clients.csproj" />
+    <ProjectReference Include="..\SteamDealX.Core\SteamDealX.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
