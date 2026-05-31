@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 
-namespace DealsAggregator.Infrastructure.Services;
+namespace SteamDealX.Infrastructure.Services;
 
 /// <summary>
 /// Singleton thread-safe que rastreia quantas vezes cada jogo foi acessado.

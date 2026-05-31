@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\DealsAggregator.Clients\DealsAggregator.Clients.csproj" />
+    <ProjectReference Include="..\..\src\SteamDealX.Clients\SteamDealX.Clients.csproj" />
   </ItemGroup>
 
 </Project>

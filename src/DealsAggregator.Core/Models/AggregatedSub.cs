@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace DealsAggregator.Core.Models;
+namespace SteamDealX.Core.Models;
 
 /// <summary>Dados de preço agregados de um sub/package Steam a partir de múltiplas fontes.</summary>
 public sealed record AggregatedSub(

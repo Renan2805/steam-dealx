@@ -1,6 +1,6 @@
-using DealsAggregator.Clients.Models;
+using SteamDealX.Clients.Models;
 
-namespace DealsAggregator.Clients.Abstractions;
+namespace SteamDealX.Clients.Abstractions;
 
 public interface IGgDealsClient
 {

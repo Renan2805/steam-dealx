@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text;
 
-namespace DealsAggregator.Clients.Tests;
+namespace SteamDealX.Clients.Tests;
 
 internal sealed class FakeHttpMessageHandler(string json, HttpStatusCode statusCode = HttpStatusCode.OK)
     : HttpMessageHandler

@@ -1,18 +1,18 @@
-using DealsAggregator.Core.Abstractions;
-using DealsAggregator.Infrastructure.Cache;
-using DealsAggregator.Infrastructure.Persistence;
-using DealsAggregator.Infrastructure.Services;
+using SteamDealX.Core.Abstractions;
+using SteamDealX.Infrastructure.Cache;
+using SteamDealX.Infrastructure.Persistence;
+using SteamDealX.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace DealsAggregator.Infrastructure.Extensions;
+namespace SteamDealX.Infrastructure.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddDealsAggregatorInfrastructure(
+    public static IServiceCollection AddSteamDealXInfrastructure(
         this IServiceCollection services,
         IConfiguration configuration)
     {

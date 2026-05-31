@@ -1,8 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "PowerShell(Remove-Item \"C:\\\\Users\\\\renan\\\\OneDrive\\\\Documentos\\\\projects\\\\steam-dealx\\\\src\\\\DealsAggregator.Clients\\\\Responses\\\\ItadHistoryLowResponse.cs\" -Confirm:$false)",
-      "PowerShell(Remove-Item \"C:\\\\Users\\\\renan\\\\OneDrive\\\\Documentos\\\\projects\\\\steam-dealx\\\\src\\\\DealsAggregator.Clients\\\\Models\\\\ItadHistoryLow.cs\" -Confirm:$false)"
+      "PowerShell(Remove-Item \"C:\\\\Users\\\\renan\\\\OneDrive\\\\Documentos\\\\projects\\\\steam-dealx\\\\src\\\\SteamDealX.Clients\\\\Responses\\\\ItadHistoryLowResponse.cs\" -Confirm:$false)",
+      "PowerShell(Remove-Item \"C:\\\\Users\\\\renan\\\\OneDrive\\\\Documentos\\\\projects\\\\steam-dealx\\\\src\\\\SteamDealX.Clients\\\\Models\\\\ItadHistoryLow.cs\" -Confirm:$false)"
     ]
   }
 }

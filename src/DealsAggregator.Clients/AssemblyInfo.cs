@@ -1,3 +1,3 @@
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("DealsAggregator.Clients.Tests")]
+[assembly: InternalsVisibleTo("SteamDealX.Clients.Tests")]

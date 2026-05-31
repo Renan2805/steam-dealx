@@ -13,9 +13,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DealsAggregator.Core\DealsAggregator.Core.csproj" />
-    <ProjectReference Include="..\DealsAggregator.Clients\DealsAggregator.Clients.csproj" />
-    <ProjectReference Include="..\DealsAggregator.Infrastructure\DealsAggregator.Infrastructure.csproj" />
+    <ProjectReference Include="..\SteamDealX.Clients\SteamDealX.Clients.csproj" />
+    <ProjectReference Include="..\SteamDealX.Infrastructure\SteamDealX.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

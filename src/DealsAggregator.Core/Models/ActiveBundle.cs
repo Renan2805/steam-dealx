@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace DealsAggregator.Core.Models;
+namespace SteamDealX.Core.Models;
 
 /// <summary>Bundle ativo que contém o jogo.</summary>
 public sealed record ActiveBundle(

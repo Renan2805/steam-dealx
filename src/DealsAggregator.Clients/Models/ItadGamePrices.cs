@@ -1,4 +1,4 @@
-namespace DealsAggregator.Clients.Models;
+namespace SteamDealX.Clients.Models;
 
 public sealed record ItadGamePrices(
     IReadOnlyList<ItadStorePrice> Deals,

@@ -1,4 +1,4 @@
-namespace DealsAggregator.Clients;
+namespace SteamDealX.Clients;
 
 /// <summary>
 /// Lançada quando uma API upstream (gg.deals ou ITAD) retorna uma resposta de erro.

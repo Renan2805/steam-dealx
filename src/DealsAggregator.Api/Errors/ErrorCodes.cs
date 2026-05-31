@@ -1,4 +1,4 @@
-namespace DealsAggregator.Api.Errors;
+namespace SteamDealX.Api.Errors;
 
 /// <summary>Códigos de erro usados no campo <c>code</c> das respostas ProblemDetails.</summary>
 public static class ErrorCodes

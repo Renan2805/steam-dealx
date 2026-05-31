@@ -1,6 +1,6 @@
-using DealsAggregator.Api.Errors;
-using DealsAggregator.Clients.Extensions;
-using DealsAggregator.Infrastructure.Extensions;
+using SteamDealX.Api.Errors;
+using SteamDealX.Clients.Extensions;
+using SteamDealX.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Scalar.AspNetCore;
@@ -8,8 +8,8 @@ using Scalar.AspNetCore;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
-builder.Services.AddDealsAggregatorClients(builder.Configuration);
-builder.Services.AddDealsAggregatorInfrastructure(builder.Configuration);
+builder.Services.AddSteamDealXClients(builder.Configuration);
+builder.Services.AddSteamDealXInfrastructure(builder.Configuration);
 
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();

@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace DealsAggregator.Core.Models;
+namespace SteamDealX.Core.Models;
 
 /// <summary>Tipo de oferta.</summary>
 public enum OfferType

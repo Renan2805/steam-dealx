@@ -1,14 +1,14 @@
-using DealsAggregator.Clients.Abstractions;
-using DealsAggregator.Clients.Options;
+using SteamDealX.Clients.Abstractions;
+using SteamDealX.Clients.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
-namespace DealsAggregator.Clients.Extensions;
+namespace SteamDealX.Clients.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddDealsAggregatorClients(
+    public static IServiceCollection AddSteamDealXClients(
         this IServiceCollection services,
         IConfiguration configuration)
     {

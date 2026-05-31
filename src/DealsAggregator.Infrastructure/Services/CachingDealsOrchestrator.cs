@@ -1,8 +1,8 @@
-using DealsAggregator.Core.Abstractions;
-using DealsAggregator.Core.Models;
+using SteamDealX.Core.Abstractions;
+using SteamDealX.Core.Models;
 using Microsoft.Extensions.Caching.Hybrid;
 
-namespace DealsAggregator.Infrastructure.Services;
+namespace SteamDealX.Infrastructure.Services;
 
 internal sealed class CachingDealsOrchestrator(
     DealsOrchestrator inner,

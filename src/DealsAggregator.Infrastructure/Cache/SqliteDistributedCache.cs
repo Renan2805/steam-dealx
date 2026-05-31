@@ -1,8 +1,8 @@
-using DealsAggregator.Infrastructure.Persistence;
+using SteamDealX.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 
-namespace DealsAggregator.Infrastructure.Cache;
+namespace SteamDealX.Infrastructure.Cache;
 
 internal sealed class SqliteDistributedCache(IDbContextFactory<AppDbContext> factory) : IDistributedCache
 {

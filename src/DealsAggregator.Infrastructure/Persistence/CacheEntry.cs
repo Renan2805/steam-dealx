@@ -1,4 +1,4 @@
-namespace DealsAggregator.Infrastructure.Persistence;
+namespace SteamDealX.Infrastructure.Persistence;
 
 internal sealed class CacheEntry
 {

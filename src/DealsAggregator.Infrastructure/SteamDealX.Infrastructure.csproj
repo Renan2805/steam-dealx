@@ -1,8 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\DealsAggregator.Core\DealsAggregator.Core.csproj" />
-    <ProjectReference Include="..\DealsAggregator.Clients\DealsAggregator.Clients.csproj" />
+    <ProjectReference Include="..\SteamDealX.Clients\SteamDealX.Clients.csproj" />
   </ItemGroup>
 
   <ItemGroup>

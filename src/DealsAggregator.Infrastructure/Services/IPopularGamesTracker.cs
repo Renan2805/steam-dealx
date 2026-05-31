@@ -1,4 +1,4 @@
-namespace DealsAggregator.Infrastructure.Services;
+namespace SteamDealX.Infrastructure.Services;
 
 internal interface IPopularGamesTracker
 {

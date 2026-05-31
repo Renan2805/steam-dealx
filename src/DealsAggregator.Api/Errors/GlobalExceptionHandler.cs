@@ -1,9 +1,9 @@
 using System.Net;
 using System.Net.Mime;
-using DealsAggregator.Clients;
+using SteamDealX.Clients;
 using Microsoft.AspNetCore.Diagnostics;
 
-namespace DealsAggregator.Api.Errors;
+namespace SteamDealX.Api.Errors;
 
 internal sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
 {

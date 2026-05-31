@@ -1,4 +1,4 @@
-namespace DealsAggregator.Clients.Options;
+namespace SteamDealX.Clients.Options;
 
 public sealed class GgDealsOptions
 {

@@ -1,11 +1,11 @@
 using System.Net.Http.Json;
-using DealsAggregator.Clients.Abstractions;
-using DealsAggregator.Clients.Models;
-using DealsAggregator.Clients.Options;
-using DealsAggregator.Clients.Responses;
+using SteamDealX.Clients.Abstractions;
+using SteamDealX.Clients.Models;
+using SteamDealX.Clients.Options;
+using SteamDealX.Clients.Responses;
 using Microsoft.Extensions.Options;
 
-namespace DealsAggregator.Clients;
+namespace SteamDealX.Clients;
 
 internal sealed class ItadClient(HttpClient httpClient, IOptions<ItadOptions> options) : IItadClient
 {

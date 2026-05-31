@@ -1,10 +1,10 @@
-using DealsAggregator.Api.Errors;
-using DealsAggregator.Core.Abstractions;
-using DealsAggregator.Core.Models;
+using SteamDealX.Api.Errors;
+using SteamDealX.Core.Abstractions;
+using SteamDealX.Core.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
-namespace DealsAggregator.Api.Controllers;
+namespace SteamDealX.Api.Controllers;
 
 [Tags("Bundles")]
 [Route("[controller]")]

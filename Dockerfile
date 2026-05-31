@@ -3,16 +3,16 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Copy project files first — camada de cache para dotnet restore
-COPY src/DealsAggregator.Core/DealsAggregator.Core.csproj                       src/DealsAggregator.Core/
-COPY src/DealsAggregator.Clients/DealsAggregator.Clients.csproj                 src/DealsAggregator.Clients/
-COPY src/DealsAggregator.Infrastructure/DealsAggregator.Infrastructure.csproj   src/DealsAggregator.Infrastructure/
-COPY src/DealsAggregator.Api/DealsAggregator.Api.csproj                         src/DealsAggregator.Api/
+COPY src/SteamDealX.Core/SteamDealX.Core.csproj                       src/SteamDealX.Core/
+COPY src/SteamDealX.Clients/SteamDealX.Clients.csproj                 src/SteamDealX.Clients/
+COPY src/SteamDealX.Infrastructure/SteamDealX.Infrastructure.csproj   src/SteamDealX.Infrastructure/
+COPY src/SteamDealX.Api/SteamDealX.Api.csproj                         src/SteamDealX.Api/
 
-RUN dotnet restore src/DealsAggregator.Api/DealsAggregator.Api.csproj
+RUN dotnet restore src/SteamDealX.Api/SteamDealX.Api.csproj
 
 COPY src/ src/
 
-RUN dotnet publish src/DealsAggregator.Api/DealsAggregator.Api.csproj \
+RUN dotnet publish src/SteamDealX.Api/SteamDealX.Api.csproj \
     -c Release -o /app/publish --no-restore
 
 # Runtime stage — imagem menor sem o SDK
@@ -25,4 +25,4 @@ EXPOSE 8080
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
 
-ENTRYPOINT ["dotnet", "DealsAggregator.Api.dll"]
+ENTRYPOINT ["dotnet", "SteamDealX.Api.dll"]

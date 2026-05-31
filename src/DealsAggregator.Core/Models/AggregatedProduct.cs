@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace DealsAggregator.Core.Models;
+namespace SteamDealX.Core.Models;
 
 /// <summary>
 /// Visão unificada de qualquer produto Steam (app, sub ou bundle).

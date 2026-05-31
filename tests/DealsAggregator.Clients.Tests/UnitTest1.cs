@@ -1,4 +1,4 @@
-﻿namespace DealsAggregator.Clients.Tests;
+﻿namespace SteamDealX.Clients.Tests;
 
 public class UnitTest1
 {

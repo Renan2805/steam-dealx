@@ -1,6 +1,6 @@
-using DealsAggregator.Core.Models;
+using SteamDealX.Core.Models;
 
-namespace DealsAggregator.Core.Abstractions;
+namespace SteamDealX.Core.Abstractions;
 
 public interface IDealsOrchestrator
 {

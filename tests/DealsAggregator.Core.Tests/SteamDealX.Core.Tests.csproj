@@ -18,8 +18,4 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\DealsAggregator.Core\DealsAggregator.Core.csproj" />
-  </ItemGroup>
-
 </Project>

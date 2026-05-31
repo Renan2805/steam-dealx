@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Text.Json.Serialization;
 
-namespace DealsAggregator.Api.Errors;
+namespace SteamDealX.Api.Errors;
 
 /// <summary>
 /// Resposta de erro seguindo RFC 9457 Problem Details for HTTP APIs.

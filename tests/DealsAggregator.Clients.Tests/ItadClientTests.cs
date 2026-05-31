@@ -1,8 +1,8 @@
 using System.Net;
-using DealsAggregator.Clients.Options;
+using SteamDealX.Clients.Options;
 using static Microsoft.Extensions.Options.Options;
 
-namespace DealsAggregator.Clients.Tests;
+namespace SteamDealX.Clients.Tests;
 
 public class ItadClientTests
 {

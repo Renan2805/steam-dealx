@@ -1,10 +1,10 @@
-using DealsAggregator.Core.Models;
+using SteamDealX.Core.Models;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace DealsAggregator.Infrastructure.Services;
+namespace SteamDealX.Infrastructure.Services;
 
 /// <summary>
 /// BackgroundService que reaquece periodicamente as entradas de cache dos jogos mais acessados,

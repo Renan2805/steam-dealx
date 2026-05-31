@@ -1,9 +1,9 @@
-using DealsAggregator.Clients.Abstractions;
-using DealsAggregator.Clients.Models;
-using DealsAggregator.Core.Abstractions;
-using DealsAggregator.Core.Models;
+using SteamDealX.Clients.Abstractions;
+using SteamDealX.Clients.Models;
+using SteamDealX.Core.Abstractions;
+using SteamDealX.Core.Models;
 
-namespace DealsAggregator.Infrastructure.Services;
+namespace SteamDealX.Infrastructure.Services;
 
 internal sealed class DealsOrchestrator(IGgDealsClient ggDeals, IItadClient itad) : IDealsOrchestrator
 {

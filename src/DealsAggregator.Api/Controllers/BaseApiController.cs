@@ -1,7 +1,7 @@
-using DealsAggregator.Api.Errors;
+using SteamDealX.Api.Errors;
 using Microsoft.AspNetCore.Mvc;
 
-namespace DealsAggregator.Api.Controllers;
+namespace SteamDealX.Api.Controllers;
 
 /// <summary>Controller base com helper de resposta de erro padronizada (RFC 9457).</summary>
 [ApiController]

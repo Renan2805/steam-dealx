@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 
-namespace DealsAggregator.Infrastructure.Persistence;
+namespace SteamDealX.Infrastructure.Persistence;
 
 internal sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
