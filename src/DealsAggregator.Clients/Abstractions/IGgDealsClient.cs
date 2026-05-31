@@ -10,8 +10,9 @@ public interface IGgDealsClient
         string region = "br",
         CancellationToken ct = default);
 
-    Task<IReadOnlyDictionary<int, GgDealsBundles?>> GetBundlesAsync(
-        IReadOnlyCollection<int> steamAppIds,
+    // Até 100 Steam Bundle IDs por chamada; mesma estrutura de resposta que GetPricesAsync
+    Task<IReadOnlyDictionary<int, GgDealsPrices?>> GetBundlePricesAsync(
+        IReadOnlyCollection<int> steamBundleIds,
         string region = "br",
         CancellationToken ct = default);
 }

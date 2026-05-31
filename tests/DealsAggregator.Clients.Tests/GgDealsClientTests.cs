@@ -109,6 +109,56 @@ public class GgDealsClientTests
         Assert.Contains("region=br", url);
     }
 
+    [Fact]
+    public async Task GetBundlePricesAsync_KnownBundle_ReturnsMappedPrices()
+    {
+        const string json = """
+            {
+              "success": true,
+              "data": {
+                "7": {
+                  "title": "Counter-Strike: Condition Zero Pack",
+                  "url": "https://gg.deals/pack/counter-strike-condition-zero-pack/",
+                  "prices": {
+                    "currentRetail": "35.99",
+                    "currentKeyshops": null,
+                    "historicalRetail": "3.59",
+                    "historicalKeyshops": "6.48",
+                    "currency": "PLN"
+                  }
+                }
+              }
+            }
+            """;
+
+        var result = await CreateClient(json).GetBundlePricesAsync([7], "pl");
+
+        Assert.Single(result);
+        var prices = result[7];
+        Assert.NotNull(prices);
+        Assert.Equal("Counter-Strike: Condition Zero Pack", prices.Title);
+        Assert.Equal(35.99m, prices.CurrentRetail);
+        Assert.Null(prices.CurrentKeyshops);
+        Assert.Equal("PLN", prices.Currency);
+    }
+
+    [Fact]
+    public async Task GetBundlePricesAsync_BuildsCorrectEndpoint()
+    {
+        const string json = """{"success": true, "data": {}}""";
+        var handler = new FakeHttpMessageHandler(json);
+        var client = new GgDealsClient(
+            new HttpClient(handler) { BaseAddress = new Uri(BaseUrl) },
+            Create(new GgDealsOptions { ApiKey = "secret" }));
+
+        await client.GetBundlePricesAsync([7], "br");
+
+        var url = handler.LastRequest!.RequestUri!.ToString();
+        Assert.Contains("by-steam-bundle-id", url);
+        Assert.Contains("ids=7", url);
+        Assert.Contains("key=secret", url);
+    }
+
     private static GgDealsClient CreateClient(string json, HttpStatusCode status = HttpStatusCode.OK) =>
         new(new HttpClient(new FakeHttpMessageHandler(json, status)) { BaseAddress = new Uri(BaseUrl) },
             Create(new GgDealsOptions { ApiKey = "test" }));
