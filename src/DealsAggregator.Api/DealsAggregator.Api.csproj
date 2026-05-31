@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>e9e40aea-8218-45c2-995c-6d96e8f0ddf2</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DealsAggregator.Core\DealsAggregator.Core.csproj" />
+    <ProjectReference Include="..\DealsAggregator.Clients\DealsAggregator.Clients.csproj" />
+    <ProjectReference Include="..\DealsAggregator.Infrastructure\DealsAggregator.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

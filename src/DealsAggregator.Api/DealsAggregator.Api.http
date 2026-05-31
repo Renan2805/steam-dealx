@@ -1,0 +1,6 @@
+@DealsAggregator.Api_HostAddress = http://localhost:5287
+
+GET {{DealsAggregator.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

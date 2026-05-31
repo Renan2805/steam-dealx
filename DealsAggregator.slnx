@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/DealsAggregator.Api/DealsAggregator.Api.csproj" />
+    <Project Path="src/DealsAggregator.Clients/DealsAggregator.Clients.csproj" />
+    <Project Path="src/DealsAggregator.Core/DealsAggregator.Core.csproj" />
+    <Project Path="src/DealsAggregator.Infrastructure/DealsAggregator.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/DealsAggregator.Clients.Tests/DealsAggregator.Clients.Tests.csproj" />
+    <Project Path="tests/DealsAggregator.Core.Tests/DealsAggregator.Core.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,21 @@
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio / Rider
+.vs/
+.idea/
+*.suo
+*.user
+
+# NuGet
+*.nupkg
+*.snupkg
+
+# User secrets (stored outside repo via dotnet user-secrets)
+secrets.json
+
+# OS
+.DS_Store
+Thumbs.db
