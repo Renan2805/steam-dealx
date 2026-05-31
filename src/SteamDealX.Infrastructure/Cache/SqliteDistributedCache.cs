@@ -27,17 +27,17 @@ internal sealed class SqliteDistributedCache(IDbContextFactory<AppDbContext> fac
     public void Set(string key, byte[] value, DistributedCacheEntryOptions options)
     {
         using var db = factory.CreateDbContext();
-        var entry = BuildEntry(key, value, options);
-        db.CacheEntries.Update(entry);
-        db.SaveChanges();
+        var e = BuildEntry(key, value, options);
+        db.Database.ExecuteSql(
+            $"INSERT OR REPLACE INTO CacheEntries (Key, Value, AbsoluteExpiry, SlidingExpirySeconds, LastAccessed) VALUES ({e.Key}, {e.Value}, {e.AbsoluteExpiry}, {e.SlidingExpirySeconds}, {e.LastAccessed})");
     }
 
     public async Task SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken token = default)
     {
         await using var db = await factory.CreateDbContextAsync(token);
-        var entry = BuildEntry(key, value, options);
-        db.CacheEntries.Update(entry);
-        await db.SaveChangesAsync(token);
+        var e = BuildEntry(key, value, options);
+        await db.Database.ExecuteSqlAsync(
+            $"INSERT OR REPLACE INTO CacheEntries (Key, Value, AbsoluteExpiry, SlidingExpirySeconds, LastAccessed) VALUES ({e.Key}, {e.Value}, {e.AbsoluteExpiry}, {e.SlidingExpirySeconds}, {e.LastAccessed})", token);
     }
 
     public void Refresh(string key)
