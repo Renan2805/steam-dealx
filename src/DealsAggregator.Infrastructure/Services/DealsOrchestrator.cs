@@ -172,26 +172,6 @@ internal sealed class DealsOrchestrator(IGgDealsClient ggDeals, IItadClient itad
         return MergeBundle(steamBundleId, region, ggDealsPrices, uuid, itadData, itadBundles);
     }
 
-    public async Task<SubPrices?> GetSubAsync(
-        int steamSubId, string region = "br", CancellationToken ct = default)
-    {
-        var prices = (await ggDeals.GetSubPricesAsync([steamSubId], region, ct))
-                         .GetValueOrDefault(steamSubId);
-        if (prices is null) return null;
-
-        return new SubPrices(
-            SteamSubId:         steamSubId,
-            Title:              prices.Title,
-            GgDealsUrl:         prices.Url,
-            CurrentRetail:      prices.CurrentRetail,
-            CurrentKeyshops:    prices.CurrentKeyshops,
-            HistoricalRetail:   prices.HistoricalRetail,
-            HistoricalKeyshops: prices.HistoricalKeyshops,
-            Currency:           prices.Currency,
-            Region:             region,
-            FetchedAt:          DateTimeOffset.UtcNow);
-    }
-
     // ---------------------------------------------------------------------------
 
     private static AggregatedBundle MergeBundle(
