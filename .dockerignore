@@ -1,0 +1,24 @@
+# Build output
+**/bin/
+**/obj/
+
+# IDE
+**/.vs/
+**/.idea/
+
+# Secrets — NUNCA incluir no image
+appsettings.Development.json
+**/secrets.json
+
+# SQLite cache (gerado em runtime)
+*.db
+*.db-shm
+*.db-wal
+
+# Test projects (não necessários na imagem de produção)
+tests/
+
+# OS / git
+.DS_Store
+Thumbs.db
+.git/
