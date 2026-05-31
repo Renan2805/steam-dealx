@@ -2,7 +2,6 @@ using DealsAggregator.Core.Abstractions;
 using DealsAggregator.Infrastructure.Cache;
 using DealsAggregator.Infrastructure.Persistence;
 using DealsAggregator.Infrastructure.Services;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
@@ -42,11 +41,9 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    // Inicializa o schema do SQLite — chamar em Program.cs após o build
-    public static IApplicationBuilder UseDealsAggregatorInfrastructure(this IApplicationBuilder app)
+    public static void EnsureDatabase(this IServiceProvider services)
     {
-        using var scope = app.ApplicationServices.CreateScope();
+        using var scope = services.CreateScope();
         scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.EnsureCreated();
-        return app;
     }
 }

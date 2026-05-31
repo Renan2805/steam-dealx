@@ -2,6 +2,7 @@ using DealsAggregator.Api.Endpoints;
 using DealsAggregator.Clients.Extensions;
 using DealsAggregator.Infrastructure.Extensions;
 using Microsoft.AspNetCore.RateLimiting;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,9 +27,12 @@ builder.Services.AddRateLimiter(options =>
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
+{
     app.MapOpenApi();
+    app.MapScalarApiReference();
+}
 
-app.UseDealsAggregatorInfrastructure();
+app.Services.EnsureDatabase();
 app.UseCors();
 app.UseRateLimiter();
 app.MapGamesEndpoints();
