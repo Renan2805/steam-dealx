@@ -17,6 +17,11 @@
 secrets.json
 appsettings.Development.json
 
+# SQLite cache (gerado em runtime)
+*.db
+*.db-shm
+*.db-wal
+
 # OS
 .DS_Store
 Thumbs.db
