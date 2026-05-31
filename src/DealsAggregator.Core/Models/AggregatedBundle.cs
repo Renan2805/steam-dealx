@@ -1,0 +1,38 @@
+using System.ComponentModel;
+
+namespace DealsAggregator.Core.Models;
+
+/// <summary>Dados de preço agregados de um bundle Steam a partir de múltiplas fontes.</summary>
+public sealed record AggregatedBundle(
+    [property: Description("Steam Bundle ID (store.steampowered.com/bundle/{id}/)")]
+    int SteamBundleId,
+
+    [property: Description("Título do bundle")]
+    string Title,
+
+    [property: Description("URL da página no gg.deals — exibir como link ativo (atribuição obrigatória)")]
+    string GgDealsUrl,
+
+    [property: Description("UUID interno do IsThereAnyDeal. Null se o bundle não está no ITAD.")]
+    Guid? ItadUuid,
+
+    [property: Description("Ofertas atuais de todas as fontes (ITAD por loja + gg.deals melhor retail/keyshop)")]
+    IReadOnlyList<GameOffer> Offers,
+
+    [property: Description("Menor preço histórico absoluto de todas as fontes. Null se sem histórico.")]
+    decimal? HistoricalLow,
+
+    [property: Description("Bundles ativos que contêm este bundle (via ITAD)")]
+    IReadOnlyList<ActiveBundle> Bundles,
+
+    [property: Description("Código de moeda ISO 4217 (ex: BRL, USD)")]
+    string Currency,
+
+    [property: Description("Região da consulta (ex: br, us)")]
+    string Region,
+
+    [property: Description("Quando os dados do gg.deals foram buscados")]
+    DateTimeOffset GgDealsFetchedAt,
+
+    [property: Description("Quando os dados do ITAD foram buscados. Null se o bundle não está no ITAD.")]
+    DateTimeOffset? ItadFetchedAt);

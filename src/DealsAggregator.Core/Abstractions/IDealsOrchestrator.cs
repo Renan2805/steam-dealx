@@ -13,7 +13,7 @@ public interface IDealsOrchestrator
     Task<AggregatedGame?> SearchByTitleAsync(
         string title, string region = "br", CancellationToken ct = default);
 
-    Task<BundlePrices?> GetBundleAsync(
+    Task<AggregatedBundle?> GetBundleAsync(
         int steamBundleId, string region = "br", CancellationToken ct = default);
 
     Task<AggregatedSub?> GetSubAsync(

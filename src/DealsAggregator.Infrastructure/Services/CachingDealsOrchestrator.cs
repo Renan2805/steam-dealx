@@ -75,7 +75,7 @@ internal sealed class CachingDealsOrchestrator(
         return cached;
     }
 
-    public async Task<BundlePrices?> GetBundleAsync(
+    public async Task<AggregatedBundle?> GetBundleAsync(
         int steamBundleId, string region = "br", CancellationToken ct = default)
     {
         var result = await cache.GetOrCreateAsync(

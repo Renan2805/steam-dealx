@@ -136,24 +136,40 @@ internal sealed class DealsOrchestrator(IGgDealsClient ggDeals, IItadClient itad
         return MergeSub(steamSubId, region, ggDealsPrices, uuid, itadData, itadBundles);
     }
 
-    public async Task<BundlePrices?> GetBundleAsync(
+    public async Task<AggregatedBundle?> GetBundleAsync(
         int steamBundleId, string region = "br", CancellationToken ct = default)
     {
-        var prices = (await ggDeals.GetBundlePricesAsync([steamBundleId], region, ct))
-                         .GetValueOrDefault(steamBundleId);
-        if (prices is null) return null;
+        var country = region.ToUpperInvariant();
 
-        return new BundlePrices(
-            SteamBundleId:      steamBundleId,
-            Title:              prices.Title,
-            GgDealsUrl:         prices.Url,
-            CurrentRetail:      prices.CurrentRetail,
-            CurrentKeyshops:    prices.CurrentKeyshops,
-            HistoricalRetail:   prices.HistoricalRetail,
-            HistoricalKeyshops: prices.HistoricalKeyshops,
-            Currency:           prices.Currency,
-            Region:             region,
-            FetchedAt:          DateTimeOffset.UtcNow);
+        // Fase 1 — paralela: gg.deals bundle prices + lookup UUID via bundle/{id}
+        var ggDealsTask = ggDeals.GetBundlePricesAsync([steamBundleId], region, ct);
+        var uuidTask    = itad.LookupBySteamBundleIdAsync(steamBundleId, ct);
+
+        await Task.WhenAll(ggDealsTask, uuidTask);
+
+        var ggDealsPrices = (await ggDealsTask).GetValueOrDefault(steamBundleId);
+        var uuid          = await uuidTask;
+
+        // Fase 2 — paralela: preços ITAD + bundles ativos
+        ItadGamePrices?             itadData    = null;
+        IReadOnlyList<ActiveBundle> itadBundles = [];
+
+        if (uuid is { } id)
+        {
+            var pricesTask  = itad.GetPricesAsync([id], country, ct);
+            var bundlesTask = itad.GetGameBundlesAsync(id, country, ct);
+
+            await Task.WhenAll(pricesTask, bundlesTask);
+
+            itadData    = (await pricesTask).GetValueOrDefault(id);
+            itadBundles = (await bundlesTask)
+                .Select(b => new ActiveBundle(b.Title, b.Url, b.Store))
+                .ToList();
+        }
+
+        if (ggDealsPrices is null && itadData is null) return null;
+
+        return MergeBundle(steamBundleId, region, ggDealsPrices, uuid, itadData, itadBundles);
     }
 
     public async Task<SubPrices?> GetSubAsync(
@@ -177,6 +193,51 @@ internal sealed class DealsOrchestrator(IGgDealsClient ggDeals, IItadClient itad
     }
 
     // ---------------------------------------------------------------------------
+
+    private static AggregatedBundle MergeBundle(
+        int steamBundleId,
+        string region,
+        GgDealsPrices? ggDealsPrices,
+        Guid? itadUuid,
+        ItadGamePrices? itadData,
+        IReadOnlyList<ActiveBundle>? bundles = null)
+    {
+        var offers = new List<GameOffer>((itadData?.Deals.Count ?? 0) + 2);
+
+        if (itadData is not null)
+            foreach (var deal in itadData.Deals)
+                offers.Add(new GameOffer(deal.Shop, deal.Price, deal.Regular, deal.CutPercent, deal.Url, OfferType.Retail, region));
+
+        if (ggDealsPrices?.CurrentRetail is { } retail)
+            offers.Add(new GameOffer("gg.deals", retail, null, 0, ggDealsPrices.Url, OfferType.Retail, region));
+
+        if (ggDealsPrices?.CurrentKeyshops is { } keyshop)
+            offers.Add(new GameOffer("gg.deals", keyshop, null, 0, ggDealsPrices.Url, OfferType.Keyshop, region));
+
+        var historicalLow = new[]
+            {
+                ggDealsPrices?.HistoricalRetail,
+                ggDealsPrices?.HistoricalKeyshops,
+                itadData?.HistoricalLow
+            }
+            .Where(x => x is > 0)
+            .Select(x => x!.Value)
+            .DefaultIfEmpty()
+            .Min() is var min && min > 0 ? min : (decimal?)null;
+
+        return new AggregatedBundle(
+            SteamBundleId:    steamBundleId,
+            Title:            ggDealsPrices?.Title ?? string.Empty,
+            GgDealsUrl:       ggDealsPrices?.Url ?? string.Empty,
+            ItadUuid:         itadUuid,
+            Offers:           offers,
+            HistoricalLow:    historicalLow,
+            Bundles:          bundles ?? [],
+            Currency:         ggDealsPrices?.Currency ?? itadData?.HistoricalLowCurrency ?? string.Empty,
+            Region:           region,
+            GgDealsFetchedAt: DateTimeOffset.UtcNow,
+            ItadFetchedAt:    itadUuid.HasValue ? DateTimeOffset.UtcNow : null);
+    }
 
     private static AggregatedSub MergeSub(
         int steamSubId,

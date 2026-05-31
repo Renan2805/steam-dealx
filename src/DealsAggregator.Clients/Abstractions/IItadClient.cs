@@ -13,6 +13,9 @@ public interface IItadClient
     // Resolve sub/{steamSubId} → UUID ITAD via POST /lookup/id/shop/61/v1
     Task<Guid?> LookupBySteamSubIdAsync(int steamSubId, CancellationToken ct = default);
 
+    // Resolve bundle/{steamBundleId} → UUID ITAD via POST /lookup/id/shop/61/v1
+    Task<Guid?> LookupBySteamBundleIdAsync(int steamBundleId, CancellationToken ct = default);
+
     // GET /games/bundles/v2 — bundles ativos que contêm o jogo (vazio se nenhum)
     Task<IReadOnlyList<ItadBundle>> GetGameBundlesAsync(
         Guid itadUuid, string country = "BR", CancellationToken ct = default);

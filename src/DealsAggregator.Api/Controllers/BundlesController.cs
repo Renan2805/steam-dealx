@@ -14,14 +14,17 @@ public sealed class BundlesController(IDealsOrchestrator orchestrator) : BaseApi
     private const string ProblemJson = "application/problem+json";
 
     /// <summary>
-    /// Retorna os preços de um bundle Steam, identificado pelo Steam Bundle ID.
+    /// Retorna dados agregados de um bundle Steam a partir de múltiplas fontes.
     /// </summary>
     /// <remarks>
-    /// Dados fornecidos exclusivamente pelo gg.deals, que rastreia preços de bundles
-    /// da Steam Store. O ITAD não cobre preços de bundles.
-    ///
     /// O Steam Bundle ID pode ser encontrado na URL da Steam:
     /// `store.steampowered.com/bundle/{steamBundleId}/`
+    ///
+    /// **Fontes de dados:**
+    /// - **gg.deals** — melhor preço de varejo e keyshop do bundle.
+    /// - **IsThereAnyDeal** — preços por loja com cut%, mínimo histórico e bundles ativos.
+    ///   O ITAD resolve `bundle/{id}` para um UUID interno via `/lookup/id/shop/61/v1`.
+    ///   Se o bundle não existir no ITAD, os campos ITAD ficam vazios mas os dados do gg.deals são retornados.
     ///
     /// **Atribuição obrigatória:** exibir o campo `ggDealsUrl` como hyperlink ativo
     /// em qualquer interface que mostre os dados (exigência dos Termos de Uso do gg.deals).
@@ -31,8 +34,8 @@ public sealed class BundlesController(IDealsOrchestrator orchestrator) : BaseApi
     /// **Região:** código de duas letras minúsculas (ex: `br`, `us`, `eu`). Default: `br`.
     /// </remarks>
     [HttpGet("{steamBundleId:int}")]
-    [EndpointSummary("Preços de um bundle Steam")]
-    [ProducesResponseType(typeof(BundlePrices), StatusCodes.Status200OK)]
+    [EndpointSummary("Dados agregados de um bundle Steam")]
+    [ProducesResponseType(typeof(AggregatedBundle), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound, ProblemJson)]
     [ProducesResponseType(typeof(ApiError), StatusCodes.Status429TooManyRequests, ProblemJson)]
     [ProducesResponseType(typeof(ApiError), StatusCodes.Status502BadGateway, ProblemJson)]
