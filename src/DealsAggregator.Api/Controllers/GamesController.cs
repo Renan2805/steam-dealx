@@ -11,6 +11,8 @@ namespace DealsAggregator.Api.Controllers;
 [EnableRateLimiting("api")]
 public sealed class GamesController(IDealsOrchestrator orchestrator) : BaseApiController
 {
+    private const string ProblemJson = "application/problem+json";
+
     /// <summary>
     /// Retorna os preços atuais de todas as fontes para um único jogo, identificado pelo Steam App ID.
     /// </summary>
@@ -28,10 +30,10 @@ public sealed class GamesController(IDealsOrchestrator orchestrator) : BaseApiCo
     /// </remarks>
     [HttpGet("{steamAppId:int}")]
     [EndpointSummary("Preços agregados de um jogo")]
-    [ProducesResponseType<AggregatedGame>(StatusCodes.Status200OK)]
-    [ProducesResponseType<ApiError>(StatusCodes.Status404NotFound, "application/problem+json")]
-    [ProducesResponseType<ApiError>(StatusCodes.Status429TooManyRequests, "application/problem+json")]
-    [ProducesResponseType<ApiError>(StatusCodes.Status502BadGateway, "application/problem+json")]
+    [ProducesResponseType(typeof(AggregatedGame), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound, ProblemJson)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status429TooManyRequests, ProblemJson)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status502BadGateway, ProblemJson)]
     public async Task<IActionResult> GetGame(
         int steamAppId,
         string? region,
@@ -60,10 +62,10 @@ public sealed class GamesController(IDealsOrchestrator orchestrator) : BaseApiCo
     /// </remarks>
     [HttpGet("batch")]
     [EndpointSummary("Preços de múltiplos jogos em lote")]
-    [ProducesResponseType<IReadOnlyDictionary<int, AggregatedGame?>>(StatusCodes.Status200OK)]
-    [ProducesResponseType<ApiError>(StatusCodes.Status400BadRequest, "application/problem+json")]
-    [ProducesResponseType<ApiError>(StatusCodes.Status429TooManyRequests, "application/problem+json")]
-    [ProducesResponseType<ApiError>(StatusCodes.Status502BadGateway, "application/problem+json")]
+    [ProducesResponseType(typeof(Dictionary<int, AggregatedGame>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest, ProblemJson)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status429TooManyRequests, ProblemJson)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status502BadGateway, ProblemJson)]
     public async Task<IActionResult> GetGamesBatch(
         [FromQuery] int[]? ids,
         string? region,
@@ -89,12 +91,12 @@ public sealed class GamesController(IDealsOrchestrator orchestrator) : BaseApiCo
     /// </remarks>
     [HttpGet("search")]
     [EndpointSummary("Busca jogo por título")]
-    [ProducesResponseType<AggregatedGame>(StatusCodes.Status200OK)]
-    [ProducesResponseType<ApiError>(StatusCodes.Status400BadRequest, "application/problem+json")]
-    [ProducesResponseType<ApiError>(StatusCodes.Status404NotFound, "application/problem+json")]
-    [ProducesResponseType<ApiError>(StatusCodes.Status429TooManyRequests, "application/problem+json")]
-    [ProducesResponseType<ApiError>(StatusCodes.Status501NotImplemented, "application/problem+json")]
-    [ProducesResponseType<ApiError>(StatusCodes.Status502BadGateway, "application/problem+json")]
+    [ProducesResponseType(typeof(AggregatedGame), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest, ProblemJson)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound, ProblemJson)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status429TooManyRequests, ProblemJson)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status501NotImplemented, ProblemJson)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status502BadGateway, ProblemJson)]
     public async Task<IActionResult> SearchGame(
         string? title,
         string? region,
