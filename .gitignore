@@ -13,8 +13,9 @@
 *.nupkg
 *.snupkg
 
-# User secrets (stored outside repo via dotnet user-secrets)
+# API keys — nunca commitar
 secrets.json
+appsettings.Development.json
 
 # OS
 .DS_Store

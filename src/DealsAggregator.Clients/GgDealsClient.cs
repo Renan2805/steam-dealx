@@ -26,7 +26,16 @@ internal sealed class GgDealsClient(HttpClient httpClient, IOptions<GgDealsOptio
 
         var url = $"{endpoint}?ids={string.Join(',', ids)}&key={options.Value.ApiKey}&region={region}";
 
-        var response = await httpClient.GetFromJsonAsync<GgDealsApiResponse>(url, ct)
+        var httpResponse = await httpClient.GetAsync(url, ct);
+        if (!httpResponse.IsSuccessStatusCode)
+        {
+            var body = await httpResponse.Content.ReadAsStringAsync(ct);
+            throw new HttpRequestException(
+                $"gg.deals {endpoint} returned {(int)httpResponse.StatusCode}: {body}",
+                inner: null, httpResponse.StatusCode);
+        }
+
+        var response = await httpResponse.Content.ReadFromJsonAsync<GgDealsApiResponse>(ct)
             ?? throw new InvalidOperationException($"Empty response from gg.deals {endpoint}.");
 
         if (!response.Success || response.Data is null)
