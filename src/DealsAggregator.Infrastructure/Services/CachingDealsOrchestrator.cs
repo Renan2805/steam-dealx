@@ -1,0 +1,73 @@
+using DealsAggregator.Core.Abstractions;
+using DealsAggregator.Core.Models;
+using Microsoft.Extensions.Caching.Hybrid;
+
+namespace DealsAggregator.Infrastructure.Services;
+
+internal sealed class CachingDealsOrchestrator(DealsOrchestrator inner, HybridCache cache) : IDealsOrchestrator
+{
+    private static readonly HybridCacheEntryOptions GameOptions = new()
+    {
+        Expiration           = TimeSpan.FromHours(2),
+        LocalCacheExpiration = TimeSpan.FromMinutes(10),
+    };
+
+    public async Task<AggregatedGame?> GetGameAsync(
+        int steamAppId, string region = "br", CancellationToken ct = default)
+    {
+        var result = await cache.GetOrCreateAsync(
+            $"game:{steamAppId}:{region}",
+            async ct => await inner.GetGameAsync(steamAppId, region, ct),
+            GameOptions,
+            cancellationToken: ct);
+
+        // Não cacheia null: retorna o valor mas descarta a entrada se for null
+        if (result is null)
+            await cache.RemoveAsync($"game:{steamAppId}:{region}", ct);
+
+        return result;
+    }
+
+    public async Task<IReadOnlyDictionary<int, AggregatedGame?>> GetGamesBatchAsync(
+        IReadOnlyCollection<int> steamAppIds, string region = "br", CancellationToken ct = default)
+    {
+        // Verifica o cache individualmente para cada ID e chama o orquestrador
+        // apenas para os que tiveram cache miss — preserva o budget das APIs.
+        var cached  = new Dictionary<int, AggregatedGame?>();
+        var missing = new List<int>();
+
+        foreach (var id in steamAppIds)
+        {
+            var hit = await cache.GetOrCreateAsync<AggregatedGame?>(
+                $"game:{id}:{region}",
+                _ => ValueTask.FromResult<AggregatedGame?>(null),   // factory vazia — só lê
+                GameOptions,
+                cancellationToken: ct);
+
+            if (hit is not null)
+                cached[id] = hit;
+            else
+                missing.Add(id);
+        }
+
+        if (missing.Count == 0)
+            return cached;
+
+        // Busca apenas os IDs ausentes e grava no cache individualmente
+        var fetched = await inner.GetGamesBatchAsync(missing, region, ct);
+
+        foreach (var (id, game) in fetched)
+        {
+            if (game is not null)
+                await cache.SetAsync($"game:{id}:{region}", game, GameOptions, cancellationToken: ct);
+
+            cached[id] = game;
+        }
+
+        return cached;
+    }
+
+    public Task<AggregatedGame?> SearchByTitleAsync(
+        string title, string region = "br", CancellationToken ct = default)
+        => inner.SearchByTitleAsync(title, region, ct);
+}
