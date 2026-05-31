@@ -11,7 +11,6 @@ public class ItadClientTests
     private static readonly Guid GameId1 = Guid.Parse("3d3a3c00-0000-0000-0000-000000000001");
     private static readonly Guid GameId2 = Guid.Parse("3d3a3c00-0000-0000-0000-000000000002");
     private static readonly Guid GameId3 = Guid.Parse("3d3a3c00-0000-0000-0000-000000000003");
-    private static readonly Guid GameId4 = Guid.Parse("3d3a3c00-0000-0000-0000-000000000004");
 
     [Fact]
     public async Task LookupBySteamAppIdAsync_GameFound_ReturnsUuid()
@@ -35,7 +34,8 @@ public class ItadClientTests
     [Fact]
     public async Task LookupBySteamAppIdAsync_GameNotFound_ReturnsNull()
     {
-        const string json = """{"found": false, "game": null}""";
+        // Spec: when found:false, "game" key may be absent entirely
+        const string json = """{"found": false}""";
 
         var result = await CreateClient(json).LookupBySteamAppIdAsync(99999);
 
@@ -62,18 +62,30 @@ public class ItadClientTests
     }
 
     [Fact]
-    public async Task GetPricesAsync_ReturnsDealsByUuid()
+    public async Task GetPricesAsync_ReturnsDealsByUuidWithHistoricalLow()
     {
         const string json = """
             [
               {
                 "id": "3d3a3c00-0000-0000-0000-000000000003",
+                "historyLow": {
+                  "all": {"amount": 0.99, "amountInt": 99, "currency": "USD"},
+                  "y1":  {"amount": 0.99, "amountInt": 99, "currency": "USD"},
+                  "m3":  {"amount": 9.99, "amountInt": 999, "currency": "USD"}
+                },
                 "deals": [
                   {
-                    "shop": {"id": 1, "name": "Steam"},
+                    "shop": {"id": 61, "name": "Steam"},
                     "price": {"amount": 4.99, "amountInt": 499, "currency": "USD"},
                     "regular": {"amount": 9.99, "amountInt": 999, "currency": "USD"},
                     "cut": 50,
+                    "voucher": null,
+                    "storeLow": null,
+                    "flag": null,
+                    "drm": [],
+                    "platforms": [],
+                    "timestamp": "2024-01-01T00:00:00Z",
+                    "expiry": null,
                     "url": "https://store.steampowered.com/app/220"
                   }
                 ]
@@ -85,52 +97,41 @@ public class ItadClientTests
 
         Assert.Single(result);
         Assert.True(result.ContainsKey(GameId3));
-        var deal = result[GameId3].Single();
+
+        var data = result[GameId3];
+        var deal = data.Deals.Single();
         Assert.Equal("Steam", deal.Shop);
         Assert.Equal(4.99m, deal.Price);
         Assert.Equal(9.99m, deal.Regular);
         Assert.Equal(50, deal.CutPercent);
+
+        // historyLow.all embutido na mesma resposta
+        Assert.Equal(0.99m, data.HistoricalLow);
+        Assert.Equal("USD", data.HistoricalLowCurrency);
+    }
+
+    [Fact]
+    public async Task GetPricesAsync_NullHistoryLow_ReturnedAsNull()
+    {
+        const string json = """
+            [
+              {
+                "id": "3d3a3c00-0000-0000-0000-000000000003",
+                "historyLow": {"all": null, "y1": null, "m3": null},
+                "deals": []
+              }
+            ]
+            """;
+
+        var result = await CreateClient(json).GetPricesAsync([GameId3], "US");
+
+        Assert.Null(result[GameId3].HistoricalLow);
     }
 
     [Fact]
     public async Task GetPricesAsync_EmptyIds_ReturnsEmpty()
     {
         var result = await CreateClient("[]").GetPricesAsync([]);
-        Assert.Empty(result);
-    }
-
-    [Fact]
-    public async Task GetHistoryLowAsync_Found_ReturnsHistoryLowByUuid()
-    {
-        const string json = """
-            [
-              {
-                "id": "3d3a3c00-0000-0000-0000-000000000004",
-                "low": {
-                  "shop": {"id": 1, "name": "Steam"},
-                  "price": {"amount": 2.49, "amountInt": 249, "currency": "USD"},
-                  "regular": {"amount": 9.99, "amountInt": 999, "currency": "USD"},
-                  "cut": 75,
-                  "timestamp": "2023-06-15T10:00:00Z"
-                }
-              }
-            ]
-            """;
-
-        var result = await CreateClient(json).GetHistoryLowAsync([GameId4], "US");
-
-        Assert.Single(result);
-        var low = result[GameId4];
-        Assert.NotNull(low);
-        Assert.Equal(2.49m, low.Amount);
-        Assert.Equal("USD", low.Currency);
-        Assert.NotNull(low.Timestamp);
-    }
-
-    [Fact]
-    public async Task GetHistoryLowAsync_EmptyIds_ReturnsEmpty()
-    {
-        var result = await CreateClient("[]").GetHistoryLowAsync([]);
         Assert.Empty(result);
     }
 

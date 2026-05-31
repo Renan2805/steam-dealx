@@ -23,10 +23,10 @@ internal sealed class ItadClient(HttpClient httpClient, IOptions<ItadOptions> op
         return response?.Found == true ? response.Game?.Id : null;
     }
 
-    public async Task<IReadOnlyDictionary<Guid, IReadOnlyList<ItadStorePrice>>> GetPricesAsync(
+    public async Task<IReadOnlyDictionary<Guid, ItadGamePrices>> GetPricesAsync(
         IReadOnlyCollection<Guid> gameIds, string country = "BR", CancellationToken ct = default)
     {
-        if (gameIds.Count == 0) return new Dictionary<Guid, IReadOnlyList<ItadStorePrice>>();
+        if (gameIds.Count == 0) return new Dictionary<Guid, ItadGamePrices>();
 
         var resp = await httpClient.PostAsJsonAsync(
             $"games/prices/v3?country={country}&key={options.Value.ApiKey}", gameIds, ct);
@@ -36,26 +36,11 @@ internal sealed class ItadClient(HttpClient httpClient, IOptions<ItadOptions> op
 
         return items.ToDictionary(
             r => r.Id,
-            r => (IReadOnlyList<ItadStorePrice>)r.Deals
-                .Select(d => new ItadStorePrice(d.Shop.Name, d.Price.Amount, d.Regular?.Amount, d.Cut, d.Url))
-                .ToList());
-    }
-
-    public async Task<IReadOnlyDictionary<Guid, ItadHistoryLow?>> GetHistoryLowAsync(
-        IReadOnlyCollection<Guid> gameIds, string country = "BR", CancellationToken ct = default)
-    {
-        if (gameIds.Count == 0) return new Dictionary<Guid, ItadHistoryLow?>();
-
-        var resp = await httpClient.PostAsJsonAsync(
-            $"games/historylow/v1?country={country}&key={options.Value.ApiKey}", gameIds, ct);
-        resp.EnsureSuccessStatusCode();
-
-        var items = await resp.Content.ReadFromJsonAsync<IReadOnlyList<ItadHistoryLowResponse>>(cancellationToken: ct) ?? [];
-
-        return items.ToDictionary(
-            r => r.Id,
-            r => r.Low is null
-                ? (ItadHistoryLow?)null
-                : new ItadHistoryLow(r.Low.Price.Amount, r.Low.Price.Currency, r.Low.Timestamp));
+            r => new ItadGamePrices(
+                Deals: r.Deals
+                    .Select(d => new ItadStorePrice(d.Shop.Name, d.Price.Amount, d.Regular?.Amount, d.Cut, d.Url))
+                    .ToList(),
+                HistoricalLow: r.HistoryLow?.All?.Amount,
+                HistoricalLowCurrency: r.HistoryLow?.All?.Currency ?? string.Empty));
     }
 }

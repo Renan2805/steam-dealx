@@ -7,8 +7,18 @@ internal sealed class ItadPricesResponse
     [JsonPropertyName("id")]
     public Guid Id { get; init; }
 
+    // historyLow.all = mínimo histórico all-time — evita chamada separada ao /historylow/v1
+    [JsonPropertyName("historyLow")]
+    public ItadHistoryLowBlock? HistoryLow { get; init; }
+
     [JsonPropertyName("deals")]
     public IReadOnlyList<ItadDeal> Deals { get; init; } = [];
+}
+
+internal sealed class ItadHistoryLowBlock
+{
+    [JsonPropertyName("all")]
+    public ItadMoney? All { get; init; }
 }
 
 internal sealed class ItadDeal

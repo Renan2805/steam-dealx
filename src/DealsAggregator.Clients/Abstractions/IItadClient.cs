@@ -7,14 +7,8 @@ public interface IItadClient
     Task<Guid?> LookupBySteamAppIdAsync(int steamAppId, CancellationToken ct = default);
     Task<Guid?> LookupByTitleAsync(string title, CancellationToken ct = default);
 
-    // Retorna deals agrupados por UUID — funciona para single e batch
-    Task<IReadOnlyDictionary<Guid, IReadOnlyList<ItadStorePrice>>> GetPricesAsync(
-        IReadOnlyCollection<Guid> gameIds,
-        string country = "BR",
-        CancellationToken ct = default);
-
-    // Retorna mínimos históricos agrupados por UUID — funciona para single e batch
-    Task<IReadOnlyDictionary<Guid, ItadHistoryLow?>> GetHistoryLowAsync(
+    // Retorna deals + historyLow.all por UUID — historyLow já vem embutido na resposta de /prices/v3
+    Task<IReadOnlyDictionary<Guid, ItadGamePrices>> GetPricesAsync(
         IReadOnlyCollection<Guid> gameIds,
         string country = "BR",
         CancellationToken ct = default);
