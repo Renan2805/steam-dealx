@@ -90,7 +90,7 @@ internal sealed class CachingDealsOrchestrator(
         return result;
     }
 
-    public async Task<SubPrices?> GetSubAsync(
+    public async Task<AggregatedSub?> GetSubAsync(
         int steamSubId, string region = "br", CancellationToken ct = default)
     {
         var result = await cache.GetOrCreateAsync(

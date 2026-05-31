@@ -14,7 +14,7 @@ public sealed class SubsController(IDealsOrchestrator orchestrator) : BaseApiCon
     private const string ProblemJson = "application/problem+json";
 
     /// <summary>
-    /// Retorna os preços de um sub/package Steam, identificado pelo Steam Sub ID.
+    /// Retorna dados agregados de um sub/package Steam a partir de múltiplas fontes.
     /// </summary>
     /// <remarks>
     /// Subs (packages) são coleções de apps vendidas juntas na Steam Store.
@@ -23,7 +23,11 @@ public sealed class SubsController(IDealsOrchestrator orchestrator) : BaseApiCon
     /// O Steam Sub ID pode ser encontrado na URL da Steam:
     /// `store.steampowered.com/sub/{steamSubId}/`
     ///
-    /// Dados fornecidos exclusivamente pelo gg.deals.
+    /// **Fontes de dados:**
+    /// - **gg.deals** — melhor preço de varejo e keyshop do sub.
+    /// - **IsThereAnyDeal** — preços por loja com cut%, mínimo histórico e bundles ativos.
+    ///   O ITAD resolve `sub/{id}` para um UUID interno via `/lookup/id/shop/61/v1`.
+    ///   Se o sub não existir no ITAD, os campos ITAD ficam vazios mas os dados do gg.deals são retornados.
     ///
     /// **Atribuição obrigatória:** exibir o campo `ggDealsUrl` como hyperlink ativo
     /// em qualquer interface que mostre os dados (exigência dos Termos de Uso do gg.deals).
@@ -33,8 +37,8 @@ public sealed class SubsController(IDealsOrchestrator orchestrator) : BaseApiCon
     /// **Região:** código de duas letras minúsculas (ex: `br`, `us`, `eu`). Default: `br`.
     /// </remarks>
     [HttpGet("{steamSubId:int}")]
-    [EndpointSummary("Preços de um sub/package Steam")]
-    [ProducesResponseType(typeof(SubPrices), StatusCodes.Status200OK)]
+    [EndpointSummary("Dados agregados de um sub/package Steam")]
+    [ProducesResponseType(typeof(AggregatedSub), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound, ProblemJson)]
     [ProducesResponseType(typeof(ApiError), StatusCodes.Status429TooManyRequests, ProblemJson)]
     [ProducesResponseType(typeof(ApiError), StatusCodes.Status502BadGateway, ProblemJson)]

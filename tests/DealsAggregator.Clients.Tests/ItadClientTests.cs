@@ -158,6 +158,28 @@ public class ItadClientTests
     }
 
     [Fact]
+    public async Task LookupBySteamSubIdAsync_Found_ReturnsUuid()
+    {
+        // POST /lookup/id/shop/61/v1 com ["sub/518699"] retorna {"sub/518699": "uuid"}
+        var expectedId = Guid.Parse("3d3a3c00-0000-0000-0000-000000000001");
+        const string json = """{"sub/518699": "3d3a3c00-0000-0000-0000-000000000001"}""";
+
+        var result = await CreateClient(json).LookupBySteamSubIdAsync(518699);
+
+        Assert.Equal(expectedId, result);
+    }
+
+    [Fact]
+    public async Task LookupBySteamSubIdAsync_NotFound_ReturnsNull()
+    {
+        const string json = """{"sub/99999": null}""";
+
+        var result = await CreateClient(json).LookupBySteamSubIdAsync(99999);
+
+        Assert.Null(result);
+    }
+
+    [Fact]
     public async Task GetGameBundlesAsync_GameInBundles_ReturnsMappedBundles()
     {
         const string json = """

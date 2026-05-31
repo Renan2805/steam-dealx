@@ -10,6 +10,9 @@ public interface IItadClient
     // Resolve UUID ITAD → Steam App ID via /games/info/v2. Retorna null para jogos sem Steam.
     Task<int?> GetSteamAppIdAsync(Guid itadUuid, CancellationToken ct = default);
 
+    // Resolve sub/{steamSubId} → UUID ITAD via POST /lookup/id/shop/61/v1
+    Task<Guid?> LookupBySteamSubIdAsync(int steamSubId, CancellationToken ct = default);
+
     // GET /games/bundles/v2 — bundles ativos que contêm o jogo (vazio se nenhum)
     Task<IReadOnlyList<ItadBundle>> GetGameBundlesAsync(
         Guid itadUuid, string country = "BR", CancellationToken ct = default);

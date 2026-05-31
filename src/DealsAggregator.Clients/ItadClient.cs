@@ -32,6 +32,27 @@ internal sealed class ItadClient(HttpClient httpClient, IOptions<ItadOptions> op
         return response?.Appid;
     }
 
+    public async Task<Guid?> LookupBySteamSubIdAsync(int steamSubId, CancellationToken ct = default)
+    {
+        // Steam shop ID on ITAD = 61 (confirmed from /games/prices/v3 responses)
+        var shopProductId = $"sub/{steamSubId}";
+        var resp = await httpClient.PostAsJsonAsync(
+            $"lookup/id/shop/61/v1?key={options.Value.ApiKey}",
+            new[] { shopProductId },
+            ct);
+
+        if (!resp.IsSuccessStatusCode)
+        {
+            var body = await resp.Content.ReadAsStringAsync(ct);
+            throw new UpstreamApiException("IsThereAnyDeal", (int)resp.StatusCode, body);
+        }
+
+        var result = await resp.Content
+            .ReadFromJsonAsync<Dictionary<string, Guid?>>(cancellationToken: ct);
+
+        return result?.GetValueOrDefault(shopProductId);
+    }
+
     public async Task<IReadOnlyList<ItadBundle>> GetGameBundlesAsync(
         Guid itadUuid, string country = "BR", CancellationToken ct = default)
     {
