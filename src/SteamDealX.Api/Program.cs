@@ -16,6 +16,8 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddHealthChecks();
 
 builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()))
     .ConfigureApiBehaviorOptions(options =>
     {
         // Garante que erros de model binding também usam ApiError (RFC 9457 + campo code)
