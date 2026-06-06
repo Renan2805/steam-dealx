@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: steam-dealx-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: oregon
+    healthCheckPath: /health
+    envVars:
+      - key: GgDeals__ApiKey
+        sync: false   # preencher no painel (secret)
+      - key: Itad__ApiKey
+        sync: false   # preencher no painel (secret)

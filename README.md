@@ -57,11 +57,11 @@ dotnet test tests/SteamDealX.Clients.Tests/
 
 ## Deployment
 
-The app is deployed to [Fly.io](https://fly.io) (`gru` region, São Paulo) with a persistent volume for the SQLite cache.
+The app is deployed to [Render](https://render.com) as a Docker web service. The infrastructure is defined in [`render.yaml`](render.yaml) — connect the repo on Render and it picks up the Blueprint automatically. Set the API keys (`GgDeals__ApiKey`, `Itad__ApiKey`) as secrets in the dashboard.
 
-```bash
-fly deploy
-```
+The container listens on port `8080` (`EXPOSE` in the [`Dockerfile`](Dockerfile)) and exposes `/health` for Render's health check.
+
+> **Note:** the free plan has no persistent disk, so the SQLite L2 cache is ephemeral — it is recreated on each boot via `EnsureDatabase()`. Since it is only a cache, no data is lost. The free instance also sleeps after ~15 min of inactivity (cold start on the next request).
 
 Key environment variables:
 
