@@ -240,7 +240,7 @@ internal sealed class DealsOrchestrator(
             Title:            ggDealsPrices?.Title ?? string.Empty,
             GgDealsUrl:       ggDealsPrices?.Url ?? string.Empty,
             ItadUuid:         itadUuid,
-            Offers:           offers,
+            Offers:           ApplyVsSteam(offers),
             HistoricalLow:    historicalLow,
             Bundles:          bundles ?? [],
             Currency:         ggDealsPrices?.Currency ?? itadData?.HistoricalLowCurrency ?? string.Empty,
@@ -285,7 +285,7 @@ internal sealed class DealsOrchestrator(
             Title:            ggDealsPrices?.Title ?? string.Empty,
             GgDealsUrl:       ggDealsPrices?.Url ?? string.Empty,
             ItadUuid:         itadUuid,
-            Offers:           offers,
+            Offers:           ApplyVsSteam(offers),
             HistoricalLow:    historicalLow,
             Bundles:          bundles ?? [],
             Currency:         ggDealsPrices?.Currency ?? itadData?.HistoricalLowCurrency ?? string.Empty,
@@ -334,13 +334,33 @@ internal sealed class DealsOrchestrator(
             Title:            ggDealsPrices?.Title ?? string.Empty,
             GgDealsUrl:       ggDealsPrices?.Url ?? string.Empty,
             ItadUuid:         itadUuid,
-            Offers:           offers,
+            Offers:           ApplyVsSteam(offers),
             HistoricalLow:    historicalLow,
             Bundles:          bundles ?? [],
             Currency:         ggDealsPrices?.Currency ?? itadData?.HistoricalLowCurrency ?? string.Empty,
             Region:           region,
             GgDealsFetchedAt: DateTimeOffset.UtcNow,
             ItadFetchedAt:    itadUuid.HasValue ? DateTimeOffset.UtcNow : null);
+    }
+
+    // ---------------------------------------------------------------------------
+
+    internal static IReadOnlyList<GameOffer> ApplyVsSteam(List<GameOffer> offers)
+    {
+        var steamPrice = offers
+            .Where(o => o.Store == "Steam" && o.Price > 0)
+            .Select(o => o.Price)
+            .Cast<decimal?>()
+            .FirstOrDefault();
+
+        if (steamPrice is null)
+            return offers;
+
+        return offers
+            .Select(o => o.Store == "Steam"
+                ? o
+                : o with { VsSteamPercent = Math.Round((o.Price - steamPrice.Value) / steamPrice.Value * 100, 1) })
+            .ToList();
     }
 
 }

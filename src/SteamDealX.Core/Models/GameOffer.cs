@@ -32,4 +32,7 @@ public sealed record GameOffer(
     OfferType Type,
 
     [property: Description("Região desta oferta")]
-    string Region);
+    string Region,
+
+    [property: Description("Diferença percentual em relação ao preço Steam (base = 0%). Negativo = mais barato que Steam; positivo = mais caro. Null quando não há oferta Steam na lista ou esta é a própria oferta Steam.")]
+    decimal? VsSteamPercent = null);
